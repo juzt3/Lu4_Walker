@@ -1,0 +1,14 @@
+C:\Users\wtopm\source\repos\LU4_Walker\LU4_Walker\bin\Debug\LU4_Walker.exe.config
+C:\Users\wtopm\source\repos\LU4_Walker\LU4_Walker\bin\Debug\LU4_Walker.exe
+C:\Users\wtopm\source\repos\LU4_Walker\LU4_Walker\bin\Debug\LU4_Walker.pdb
+C:\Users\wtopm\source\repos\LU4_Walker\LU4_Walker\obj\Debug\LU4_Walker.csproj.AssemblyReference.cache
+C:\Users\wtopm\source\repos\LU4_Walker\LU4_Walker\obj\Debug\MainWindow.baml
+C:\Users\wtopm\source\repos\LU4_Walker\LU4_Walker\obj\Debug\MainWindow.g.cs
+C:\Users\wtopm\source\repos\LU4_Walker\LU4_Walker\obj\Debug\App.g.cs
+C:\Users\wtopm\source\repos\LU4_Walker\LU4_Walker\obj\Debug\LU4_Walker_MarkupCompile.cache
+C:\Users\wtopm\source\repos\LU4_Walker\LU4_Walker\obj\Debug\LU4_Walker.g.resources
+C:\Users\wtopm\source\repos\LU4_Walker\LU4_Walker\obj\Debug\LU4_Walker.Properties.Resources.resources
+C:\Users\wtopm\source\repos\LU4_Walker\LU4_Walker\obj\Debug\LU4_Walker.csproj.GenerateResource.cache
+C:\Users\wtopm\source\repos\LU4_Walker\LU4_Walker\obj\Debug\LU4_Walker.csproj.CoreCompileInputs.cache
+C:\Users\wtopm\source\repos\LU4_Walker\LU4_Walker\obj\Debug\LU4_Walker.exe
+C:\Users\wtopm\source\repos\LU4_Walker\LU4_Walker\obj\Debug\LU4_Walker.pdb

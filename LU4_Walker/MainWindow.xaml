@@ -1,9 +1,11 @@
 ﻿<Window x:Class="LU4_Walker.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="LU4 Walker" Height="280" Width="350">
+        Title="LU4 Walker" Height="380" Width="400">
     <Grid Margin="10">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -15,7 +17,7 @@
                    Margin="0,0,0,10" FontSize="14"/>
 
         <ComboBox Grid.Row="1" x:Name="ProcessComboBox" 
-                  Margin="0,0,0,10" Width="300" 
+                  Margin="0,0,0,10" Width="350" 
                   SelectionChanged="ProcessComboBox_SelectionChanged"
                   DropDownOpened="ProcessComboBox_DropDownOpened"/>
 
@@ -35,7 +37,19 @@
                 Width="150" Margin="0,0,0,10" Click="ScreenshotButton_Click"
                 ToolTip="Снимает скриншот выбранного процесса LU4 и сохраняет в папку с программой как DD.MM.YYYY - NNN.bmp. Горячая клавиша: Ctrl + F12"/>
 
-        <TextBlock Grid.Row="4" Text="LU4 Walker" 
+        <Button x:Name="CheckPixelColorButton" Grid.Row="4" Content="Проверить цвет (End)" 
+                Width="150" Margin="0,0,0,10" Click="CheckPixelColorButton_Click"
+                ToolTip="Проверяет цвет пикселя в координатах X, Y клиентской области выбранного процесса LU4. Результат в формате R, G, B. Горячая клавиша: End"/>
+
+        <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="X:" Width="30" VerticalAlignment="Center"/>
+            <TextBox x:Name="XTextBox" Width="60" Margin="5,0" Text="0"/>
+            <TextBlock Text="Y:" Width="30" VerticalAlignment="Center" Margin="10,0,0,0"/>
+            <TextBox x:Name="YTextBox" Width="60" Margin="5,0" Text="0"/>
+            <TextBlock x:Name="PixelColorTextBox" Width="120" Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="6" Text="LU4 Walker" 
                    HorizontalAlignment="Center" 
                    VerticalAlignment="Center" 
                    FontSize="16"/>

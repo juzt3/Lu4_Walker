@@ -11,6 +11,8 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
 using System.Windows.Interop;
+using System.Threading;
+using System.Windows.Forms; // Добавлено для Screen и DPI
 
 namespace LU4_Walker
 {
@@ -53,10 +55,12 @@ namespace LU4_Walker
         private const int HOTKEY_ID_SCREENSHOT = 0x9000; // ID для Ctrl + F12
         private const int HOTKEY_ID_START = 0x9001; // ID для Page Up
         private const int HOTKEY_ID_STOP = 0x9002; // ID для Page Down
+        private const int HOTKEY_ID_CHECK_PIXEL = 0x9003; // ID для End
         private const uint MOD_CONTROL = 0x0002; // Модификатор Ctrl
         private const uint VK_F12 = 0x7B; // Код клавиши F12
         private const uint VK_PAGE_UP = 0x21; // Код клавиши Page Up
         private const uint VK_PAGE_DOWN = 0x22; // Код клавиши Page Down
+        private const uint VK_END = 0x23; // Код клавиши End
         private const int WM_HOTKEY = 0x0312; // Сообщение для горячей клавиши
         private const int SW_RESTORE = 9; // Флаг для восстановления окна
 
@@ -112,6 +116,7 @@ namespace LU4_Walker
                     RegisterHotKey(hwndSource.Handle, HOTKEY_ID_SCREENSHOT, MOD_CONTROL, VK_F12); // Ctrl + F12
                     RegisterHotKey(hwndSource.Handle, HOTKEY_ID_START, 0, VK_PAGE_UP); // Page Up
                     RegisterHotKey(hwndSource.Handle, HOTKEY_ID_STOP, 0, VK_PAGE_DOWN); // Page Down
+                    RegisterHotKey(hwndSource.Handle, HOTKEY_ID_CHECK_PIXEL, 0, VK_END); // End
                 }
             }
             catch
@@ -130,6 +135,7 @@ namespace LU4_Walker
                     UnregisterHotKey(hwndSource.Handle, HOTKEY_ID_SCREENSHOT);
                     UnregisterHotKey(hwndSource.Handle, HOTKEY_ID_START);
                     UnregisterHotKey(hwndSource.Handle, HOTKEY_ID_STOP);
+                    UnregisterHotKey(hwndSource.Handle, HOTKEY_ID_CHECK_PIXEL);
                     hwndSource.RemoveHook(WndProc);
                     hwndSource = null;
                 }
@@ -168,6 +174,11 @@ namespace LU4_Walker
                     StopButton_Click(null, null);
                     handled = true;
                 }
+                else if (hotkeyId == HOTKEY_ID_CHECK_PIXEL)
+                {
+                    CheckPixelColorButton_Click(null, null);
+                    handled = true;
+                }
             }
             return IntPtr.Zero;
         }
@@ -193,11 +204,14 @@ namespace LU4_Walker
                 ProcessComboBox.SelectedIndex = 0;
                 StartButton.IsEnabled = true;
                 ScreenshotButton.IsEnabled = true;
+                CheckPixelColorButton.IsEnabled = true;
             }
             else
             {
                 StartButton.IsEnabled = false;
                 ScreenshotButton.IsEnabled = false;
+                CheckPixelColorButton.IsEnabled = false;
+                PixelColorTextBox.Text = "";
             }
         }
 
@@ -230,6 +244,7 @@ namespace LU4_Walker
             StopButton.Visibility = Visibility.Collapsed;
             Topmost = true; // Окно поверх всех
             WindowState = WindowState.Normal; // Восстановление окна
+            PixelColorTextBox.Text = ""; // Очистка поля цвета
         }
 
         private void ProcessComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -241,6 +256,7 @@ namespace LU4_Walker
                 StopButton.Visibility = Visibility.Collapsed;
                 Topmost = true; // Окно поверх всех
                 WindowState = WindowState.Normal; // Восстановление окна
+                PixelColorTextBox.Text = ""; // Очистка поля цвета
             }
         }
 
@@ -261,6 +277,77 @@ namespace LU4_Walker
             TakeScreenshot();
         }
 
+        private void CheckPixelColorButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ProcessComboBox.SelectedItem == null)
+            {
+                PixelColorTextBox.Text = "";
+                return;
+            }
+
+            string selectedWindow = ProcessComboBox.SelectedItem.ToString();
+            IntPtr hWnd = lu4Windows[selectedWindow];
+
+            // Проверка, минимизировано ли окно, и восстановление
+            if (IsIconic(hWnd))
+            {
+                ShowWindow(hWnd, SW_RESTORE);
+            }
+
+            // Активация окна для корректного рендеринга
+            SetForegroundWindow(hWnd);
+
+            // Получение размеров клиентской области
+            if (!GetClientRect(hWnd, out RECT clientRect))
+            {
+                PixelColorTextBox.Text = "";
+                return;
+            }
+
+            int width = clientRect.Right - clientRect.Left;
+            int height = clientRect.Bottom - clientRect.Top;
+
+            if (width <= 0 || height <= 0)
+            {
+                PixelColorTextBox.Text = "";
+                return;
+            }
+
+            // Проверка введённых координат
+            if (!int.TryParse(XTextBox.Text, out int x) || !int.TryParse(YTextBox.Text, out int y) ||
+                x < 0 || x >= width || y < 0 || y >= height)
+            {
+                PixelColorTextBox.Text = "";
+                return;
+            }
+
+            // Преобразование координат клиентской области в экранные
+            POINT topLeft = new POINT { X = x, Y = y };
+            if (!ClientToScreen(hWnd, ref topLeft))
+            {
+                PixelColorTextBox.Text = "";
+                return;
+            }
+
+            // Захват пикселя
+            try
+            {
+                using (Bitmap bitmap = new Bitmap(1, 1))
+                {
+                    using (Graphics graphics = Graphics.FromImage(bitmap))
+                    {
+                        graphics.CopyFromScreen(topLeft.X, topLeft.Y, 0, 0, new System.Drawing.Size(1, 1));
+                    }
+                    Color pixelColor = bitmap.GetPixel(0, 0);
+                    PixelColorTextBox.Text = $"R: {pixelColor.R}, G: {pixelColor.G}, B: {pixelColor.B}";
+                }
+            }
+            catch
+            {
+                PixelColorTextBox.Text = "";
+            }
+        }
+
         private void TakeScreenshot()
         {
             if (ProcessComboBox.SelectedItem == null)
@@ -279,6 +366,9 @@ namespace LU4_Walker
 
             // Активация окна для корректного рендеринга
             SetForegroundWindow(hWnd);
+
+            // Задержка для рендеринга окна
+            Thread.Sleep(50);
 
             // Получение размеров клиентской области
             if (!GetClientRect(hWnd, out RECT clientRect))
@@ -308,7 +398,15 @@ namespace LU4_Walker
                 {
                     using (Graphics graphics = Graphics.FromImage(bitmap))
                     {
-                        graphics.CopyFromScreen(topLeft.X, topLeft.Y, 0, 0, new System.Drawing.Size(width, height));
+                        // Учёт DPI-шкалирования
+                        float dpiScaleX = graphics.DpiX / 96.0f;
+                        float dpiScaleY = graphics.DpiY / 96.0f;
+                        int scaledX = (int)(topLeft.X / dpiScaleX);
+                        int scaledY = (int)(topLeft.Y / dpiScaleY);
+                        int scaledWidth = (int)(width / dpiScaleX);
+                        int scaledHeight = (int)(height / dpiScaleY);
+
+                        graphics.CopyFromScreen(scaledX, scaledY, 0, 0, new System.Drawing.Size(scaledWidth, scaledHeight));
                     }
 
                     // Получение пути к папке с .exe
@@ -339,13 +437,6 @@ namespace LU4_Walker
             {
                 // Игнорируем ошибки
             }
-        }
-
-        // Метод для остановки таймера при закрытии приложения
-        protected override void OnClosed(EventArgs e)
-        {
-            findMonster.Stop();
-            base.OnClosed(e);
         }
     }
 }

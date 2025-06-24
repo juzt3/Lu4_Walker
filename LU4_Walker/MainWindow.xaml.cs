@@ -12,7 +12,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Interop;
 using System.Threading;
-using System.Windows.Forms; // Добавлено для Screen и DPI
+using System.Windows.Forms;
 
 namespace LU4_Walker
 {
@@ -82,10 +82,10 @@ namespace LU4_Walker
             public int Y;
         }
 
-        private IntPtr BSFGhWnd = IntPtr.Zero;
         private DispatcherTimer findMonster;
         private Dictionary<string, IntPtr> lu4Windows;
         private HwndSource hwndSource;
+        private IntPtr selectedHwnd = IntPtr.Zero; // Хранит дескриптор текущего окна
 
         public MainWindow()
         {
@@ -217,9 +217,13 @@ namespace LU4_Walker
 
         private void findMonster_Tick(object sender, EventArgs e)
         {
-            if (BSFGhWnd != IntPtr.Zero)
+            if (selectedHwnd != IntPtr.Zero)
             {
-                PostMessage(BSFGhWnd, WM_KEYDOWN, VK_NUM_DIV, 0);
+                int r = PixelColorChecker.CheckPixelColor("R", selectedHwnd, 300, 76);
+                if (r == 144)
+                {
+                    PostMessage(selectedHwnd, WM_KEYDOWN, VK_NUM_DIV, 0);
+                }
             }
         }
 
@@ -228,7 +232,8 @@ namespace LU4_Walker
             if (ProcessComboBox.SelectedItem != null)
             {
                 string selectedWindow = ProcessComboBox.SelectedItem.ToString();
-                BSFGhWnd = lu4Windows[selectedWindow];
+                selectedHwnd = lu4Windows[selectedWindow];
+                ProcessComboBox.IsEnabled = false; // Блокировка ComboBox
                 findMonster.Start();
                 StartButton.Visibility = Visibility.Collapsed;
                 StopButton.Visibility = Visibility.Visible;
@@ -240,6 +245,8 @@ namespace LU4_Walker
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
             findMonster.Stop();
+            selectedHwnd = IntPtr.Zero; // Очистка дескриптора
+            ProcessComboBox.IsEnabled = true; // Разблокировка ComboBox
             StartButton.Visibility = Visibility.Visible;
             StopButton.Visibility = Visibility.Collapsed;
             Topmost = true; // Окно поверх всех
@@ -252,6 +259,8 @@ namespace LU4_Walker
             if (findMonster.IsEnabled)
             {
                 findMonster.Stop();
+                selectedHwnd = IntPtr.Zero; // Очистка дескриптора
+                ProcessComboBox.IsEnabled = true; // Разблокировка ComboBox
                 StartButton.Visibility = Visibility.Visible;
                 StopButton.Visibility = Visibility.Collapsed;
                 Topmost = true; // Окно поверх всех
@@ -288,64 +297,25 @@ namespace LU4_Walker
             string selectedWindow = ProcessComboBox.SelectedItem.ToString();
             IntPtr hWnd = lu4Windows[selectedWindow];
 
-            // Проверка, минимизировано ли окно, и восстановление
-            if (IsIconic(hWnd))
-            {
-                ShowWindow(hWnd, SW_RESTORE);
-            }
-
-            // Активация окна для корректного рендеринга
-            SetForegroundWindow(hWnd);
-
-            // Получение размеров клиентской области
-            if (!GetClientRect(hWnd, out RECT clientRect))
-            {
-                PixelColorTextBox.Text = "";
-                return;
-            }
-
-            int width = clientRect.Right - clientRect.Left;
-            int height = clientRect.Bottom - clientRect.Top;
-
-            if (width <= 0 || height <= 0)
-            {
-                PixelColorTextBox.Text = "";
-                return;
-            }
-
             // Проверка введённых координат
-            if (!int.TryParse(XTextBox.Text, out int x) || !int.TryParse(YTextBox.Text, out int y) ||
-                x < 0 || x >= width || y < 0 || y >= height)
+            if (!int.TryParse(XTextBox.Text, out int x) || !int.TryParse(YTextBox.Text, out int y))
             {
                 PixelColorTextBox.Text = "";
                 return;
             }
 
-            // Преобразование координат клиентской области в экранные
-            POINT topLeft = new POINT { X = x, Y = y };
-            if (!ClientToScreen(hWnd, ref topLeft))
+            // Проверка всех компонент цвета (R, G, B)
+            int r = PixelColorChecker.CheckPixelColor("R", hWnd, x, y);
+            int g = PixelColorChecker.CheckPixelColor("G", hWnd, x, y);
+            int b = PixelColorChecker.CheckPixelColor("B", hWnd, x, y);
+
+            if (r == -1 || g == -1 || b == -1)
             {
                 PixelColorTextBox.Text = "";
                 return;
             }
 
-            // Захват пикселя
-            try
-            {
-                using (Bitmap bitmap = new Bitmap(1, 1))
-                {
-                    using (Graphics graphics = Graphics.FromImage(bitmap))
-                    {
-                        graphics.CopyFromScreen(topLeft.X, topLeft.Y, 0, 0, new System.Drawing.Size(1, 1));
-                    }
-                    Color pixelColor = bitmap.GetPixel(0, 0);
-                    PixelColorTextBox.Text = $"R: {pixelColor.R}, G: {pixelColor.G}, B: {pixelColor.B}";
-                }
-            }
-            catch
-            {
-                PixelColorTextBox.Text = "";
-            }
+            PixelColorTextBox.Text = $"R: {r}, G: {g}, B: {b}";
         }
 
         private void TakeScreenshot()

@@ -27,32 +27,10 @@ namespace LU4_Walker
         private static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
 
         [DllImport("user32.dll")]
-        private static extern IntPtr GetWindowDC(IntPtr hWnd);
+        private static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
 
         [DllImport("user32.dll")]
-        private static extern bool ReleaseDC(IntPtr hWnd, IntPtr hDC);
-
-        [DllImport("user32.dll")]
-        private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
-
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr CreateCompatibleDC(IntPtr hdc);
-
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int nWidth, int nHeight);
-
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr SelectObject(IntPtr hdc, IntPtr hgdiobj);
-
-        [DllImport("gdi32.dll")]
-        private static extern bool BitBlt(IntPtr hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
-                                         IntPtr hdcSrc, int nXSrc, int nYSrc, uint dwRop);
-
-        [DllImport("gdi32.dll")]
-        private static extern bool DeleteDC(IntPtr hdc);
-
-        [DllImport("gdi32.dll")]
-        private static extern bool DeleteObject(IntPtr hObject);
+        private static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
 
         [DllImport("user32.dll")]
         private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
@@ -63,10 +41,15 @@ namespace LU4_Walker
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        private static extern bool IsIconic(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
         // Константы для сообщений Windows
         private const uint WM_KEYDOWN = 0x0100;
         private const int VK_NUM_DIV = 0x6F; // Код клавиши NumPad Divide
-        private const uint SRCCOPY = 0x00CC0020; // Код для BitBlt
         private const int HOTKEY_ID_SCREENSHOT = 0x9000; // ID для Ctrl + F12
         private const int HOTKEY_ID_START = 0x9001; // ID для Page Up
         private const int HOTKEY_ID_STOP = 0x9002; // ID для Page Down
@@ -75,6 +58,7 @@ namespace LU4_Walker
         private const uint VK_PAGE_UP = 0x21; // Код клавиши Page Up
         private const uint VK_PAGE_DOWN = 0x22; // Код клавиши Page Down
         private const int WM_HOTKEY = 0x0312; // Сообщение для горячей клавиши
+        private const int SW_RESTORE = 9; // Флаг для восстановления окна
 
         // Структура для хранения координат окна
         [StructLayout(LayoutKind.Sequential)]
@@ -84,6 +68,14 @@ namespace LU4_Walker
             public int Top;
             public int Right;
             public int Bottom;
+        }
+
+        // Структура для преобразования координат
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT
+        {
+            public int X;
+            public int Y;
         }
 
         private IntPtr BSFGhWnd = IntPtr.Zero;
@@ -279,36 +271,46 @@ namespace LU4_Walker
             string selectedWindow = ProcessComboBox.SelectedItem.ToString();
             IntPtr hWnd = lu4Windows[selectedWindow];
 
-            // Получение размеров окна
-            if (!GetWindowRect(hWnd, out RECT rect))
+            // Проверка, минимизировано ли окно, и восстановление
+            if (IsIconic(hWnd))
+            {
+                ShowWindow(hWnd, SW_RESTORE);
+            }
+
+            // Активация окна для корректного рендеринга
+            SetForegroundWindow(hWnd);
+
+            // Получение размеров клиентской области
+            if (!GetClientRect(hWnd, out RECT clientRect))
             {
                 return;
             }
 
-            int width = rect.Right - rect.Left;
-            int height = rect.Bottom - rect.Top;
+            // Преобразование координат клиентской области в экранные
+            POINT topLeft = new POINT { X = clientRect.Left, Y = clientRect.Top };
+            if (!ClientToScreen(hWnd, ref topLeft))
+            {
+                return;
+            }
+
+            int width = clientRect.Right - clientRect.Left;
+            int height = clientRect.Bottom - clientRect.Top;
 
             if (width <= 0 || height <= 0)
             {
                 return;
             }
 
-            // Захват скриншота окна
+            // Захват скриншота клиентской области
             try
             {
-                IntPtr hdcSrc = GetWindowDC(hWnd);
-                IntPtr hdcDest = CreateCompatibleDC(hdcSrc);
-                IntPtr hBitmap = CreateCompatibleBitmap(hdcSrc, width, height);
-                IntPtr hOld = SelectObject(hdcDest, hBitmap);
-
-                BitBlt(hdcDest, 0, 0, width, height, hdcSrc, 0, 0, SRCCOPY);
-
-                SelectObject(hdcDest, hOld);
-                DeleteDC(hdcDest);
-                ReleaseDC(hWnd, hdcSrc);
-
-                using (Bitmap bitmap = Bitmap.FromHbitmap(hBitmap))
+                using (Bitmap bitmap = new Bitmap(width, height))
                 {
+                    using (Graphics graphics = Graphics.FromImage(bitmap))
+                    {
+                        graphics.CopyFromScreen(topLeft.X, topLeft.Y, 0, 0, new System.Drawing.Size(width, height));
+                    }
+
                     // Получение пути к папке с .exe
                     string exePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                     string datePrefix = DateTime.Now.ToString("dd.MM.yyyy");
@@ -332,8 +334,6 @@ namespace LU4_Walker
                     // Сохранение скриншота
                     bitmap.Save(filePath, ImageFormat.Bmp);
                 }
-
-                DeleteObject(hBitmap);
             }
             catch
             {

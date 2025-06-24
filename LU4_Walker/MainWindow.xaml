@@ -1,9 +1,10 @@
 ﻿<Window x:Class="LU4_Walker.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="LU4 Walker" Height="250" Width="350">
+        Title="LU4 Walker" Height="280" Width="350">
     <Grid Margin="10">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -15,7 +16,8 @@
 
         <ComboBox Grid.Row="1" x:Name="ProcessComboBox" 
                   Margin="0,0,0,10" Width="300" 
-                  SelectionChanged="ProcessComboBox_SelectionChanged"/>
+                  SelectionChanged="ProcessComboBox_SelectionChanged"
+                  DropDownOpened="ProcessComboBox_DropDownOpened"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" 
                     HorizontalAlignment="Center" Margin="0,0,0,10">
@@ -25,7 +27,10 @@
                     Width="100" IsEnabled="False" Click="StopButton_Click"/>
         </StackPanel>
 
-        <TextBlock Grid.Row="3" Text="LU4 Walker" 
+        <Button x:Name="ScreenshotButton" Grid.Row="3" Content="Сделать скриншот" 
+                Width="150" Margin="0,0,0,10" Click="ScreenshotButton_Click"/>
+
+        <TextBlock Grid.Row="4" Text="LU4 Walker" 
                    HorizontalAlignment="Center" 
                    VerticalAlignment="Center" 
                    FontSize="16"/>

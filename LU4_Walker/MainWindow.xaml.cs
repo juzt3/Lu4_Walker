@@ -6,9 +6,11 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Win32;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
+using System.Reflection;
+using System.Windows.Interop;
 
 namespace LU4_Walker
 {
@@ -52,10 +54,27 @@ namespace LU4_Walker
         [DllImport("gdi32.dll")]
         private static extern bool DeleteObject(IntPtr hObject);
 
+        [DllImport("user32.dll")]
+        private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+        [DllImport("user32.dll")]
+        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
         // Константы для сообщений Windows
         private const uint WM_KEYDOWN = 0x0100;
         private const int VK_NUM_DIV = 0x6F; // Код клавиши NumPad Divide
         private const uint SRCCOPY = 0x00CC0020; // Код для BitBlt
+        private const int HOTKEY_ID_SCREENSHOT = 0x9000; // ID для Ctrl + F12
+        private const int HOTKEY_ID_START = 0x9001; // ID для Page Up
+        private const int HOTKEY_ID_STOP = 0x9002; // ID для Page Down
+        private const uint MOD_CONTROL = 0x0002; // Модификатор Ctrl
+        private const uint VK_F12 = 0x7B; // Код клавиши F12
+        private const uint VK_PAGE_UP = 0x21; // Код клавиши Page Up
+        private const uint VK_PAGE_DOWN = 0x22; // Код клавиши Page Down
+        private const int WM_HOTKEY = 0x0312; // Сообщение для горячей клавиши
 
         // Структура для хранения координат окна
         [StructLayout(LayoutKind.Sequential)]
@@ -70,12 +89,16 @@ namespace LU4_Walker
         private IntPtr BSFGhWnd = IntPtr.Zero;
         private DispatcherTimer findMonster;
         private Dictionary<string, IntPtr> lu4Windows;
+        private HwndSource hwndSource;
 
         public MainWindow()
         {
             InitializeComponent();
             InitializeTimer();
             LoadLU4Processes();
+            Loaded += MainWindow_Loaded;
+            Closing += MainWindow_Closing;
+            Topmost = true; // Окно поверх всех при запуске
         }
 
         private void InitializeTimer()
@@ -83,6 +106,78 @@ namespace LU4_Walker
             findMonster = new DispatcherTimer();
             findMonster.Tick += new EventHandler(findMonster_Tick);
             findMonster.Interval = new TimeSpan(0, 0, 0, 0, 200);
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Регистрация горячих клавиш
+            try
+            {
+                hwndSource = PresentationSource.FromVisual(this) as HwndSource;
+                if (hwndSource != null)
+                {
+                    hwndSource.AddHook(WndProc);
+                    RegisterHotKey(hwndSource.Handle, HOTKEY_ID_SCREENSHOT, MOD_CONTROL, VK_F12); // Ctrl + F12
+                    RegisterHotKey(hwndSource.Handle, HOTKEY_ID_START, 0, VK_PAGE_UP); // Page Up
+                    RegisterHotKey(hwndSource.Handle, HOTKEY_ID_STOP, 0, VK_PAGE_DOWN); // Page Down
+                }
+            }
+            catch
+            {
+                // Игнорируем ошибки регистрации
+            }
+        }
+
+        private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            // Снятие регистрации горячих клавиш
+            try
+            {
+                if (hwndSource != null)
+                {
+                    UnregisterHotKey(hwndSource.Handle, HOTKEY_ID_SCREENSHOT);
+                    UnregisterHotKey(hwndSource.Handle, HOTKEY_ID_START);
+                    UnregisterHotKey(hwndSource.Handle, HOTKEY_ID_STOP);
+                    hwndSource.RemoveHook(WndProc);
+                    hwndSource = null;
+                }
+            }
+            catch
+            {
+                // Игнорируем ошибки
+            }
+        }
+
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == WM_HOTKEY)
+            {
+                int hotkeyId = wParam.ToInt32();
+                // Активация окна выбранного процесса
+                if (ProcessComboBox.SelectedItem != null)
+                {
+                    string selectedWindow = ProcessComboBox.SelectedItem.ToString();
+                    IntPtr hWnd = lu4Windows[selectedWindow];
+                    SetForegroundWindow(hWnd);
+                }
+
+                if (hotkeyId == HOTKEY_ID_SCREENSHOT)
+                {
+                    TakeScreenshot();
+                    handled = true;
+                }
+                else if (hotkeyId == HOTKEY_ID_START)
+                {
+                    StartButton_Click(null, null);
+                    handled = true;
+                }
+                else if (hotkeyId == HOTKEY_ID_STOP)
+                {
+                    StopButton_Click(null, null);
+                    handled = true;
+                }
+            }
+            return IntPtr.Zero;
         }
 
         private void LoadLU4Processes()
@@ -93,7 +188,7 @@ namespace LU4_Walker
             Process[] processes = Process.GetProcesses();
             foreach (Process proc in processes)
             {
-                if (proc.MainWindowTitle.Contains("LU4") && proc.MainWindowHandle != IntPtr.Zero)
+                if (proc.MainWindowTitle.Contains("LU4") && proc.MainWindowHandle != IntPtr.Zero && proc.MainWindowTitle != "LU4 Walker")
                 {
                     string displayName = $"{proc.MainWindowTitle} (PID: {proc.Id})";
                     lu4Windows.Add(displayName, proc.MainWindowHandle);
@@ -109,7 +204,6 @@ namespace LU4_Walker
             }
             else
             {
-                MessageBox.Show("Процессы с названием LU4 не найдены!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 StartButton.IsEnabled = false;
                 ScreenshotButton.IsEnabled = false;
             }
@@ -130,16 +224,20 @@ namespace LU4_Walker
                 string selectedWindow = ProcessComboBox.SelectedItem.ToString();
                 BSFGhWnd = lu4Windows[selectedWindow];
                 findMonster.Start();
-                StartButton.IsEnabled = false;
-                StopButton.IsEnabled = true;
+                StartButton.Visibility = Visibility.Collapsed;
+                StopButton.Visibility = Visibility.Visible;
+                Topmost = false; // Окно на задний план
+                WindowState = WindowState.Minimized; // Сворачивание окна
             }
         }
 
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
             findMonster.Stop();
-            StartButton.IsEnabled = true;
-            StopButton.IsEnabled = false;
+            StartButton.Visibility = Visibility.Visible;
+            StopButton.Visibility = Visibility.Collapsed;
+            Topmost = true; // Окно поверх всех
+            WindowState = WindowState.Normal; // Восстановление окна
         }
 
         private void ProcessComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -147,8 +245,10 @@ namespace LU4_Walker
             if (findMonster.IsEnabled)
             {
                 findMonster.Stop();
-                StartButton.IsEnabled = true;
-                StopButton.IsEnabled = false;
+                StartButton.Visibility = Visibility.Visible;
+                StopButton.Visibility = Visibility.Collapsed;
+                Topmost = true; // Окно поверх всех
+                WindowState = WindowState.Normal; // Восстановление окна
             }
         }
 
@@ -159,9 +259,20 @@ namespace LU4_Walker
 
         private void ScreenshotButton_Click(object sender, RoutedEventArgs e)
         {
+            // Активация окна процесса при нажатии кнопки
+            if (ProcessComboBox.SelectedItem != null)
+            {
+                string selectedWindow = ProcessComboBox.SelectedItem.ToString();
+                IntPtr hWnd = lu4Windows[selectedWindow];
+                SetForegroundWindow(hWnd);
+            }
+            TakeScreenshot();
+        }
+
+        private void TakeScreenshot()
+        {
             if (ProcessComboBox.SelectedItem == null)
             {
-                MessageBox.Show("Выберите процесс LU4!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -171,7 +282,6 @@ namespace LU4_Walker
             // Получение размеров окна
             if (!GetWindowRect(hWnd, out RECT rect))
             {
-                MessageBox.Show("Не удалось получить размеры окна!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -180,7 +290,6 @@ namespace LU4_Walker
 
             if (width <= 0 || height <= 0)
             {
-                MessageBox.Show("Окно имеет некорректные размеры!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -200,27 +309,35 @@ namespace LU4_Walker
 
                 using (Bitmap bitmap = Bitmap.FromHbitmap(hBitmap))
                 {
-                    // Открытие диалогового окна для сохранения
-                    SaveFileDialog saveDialog = new SaveFileDialog
-                    {
-                        Filter = "BMP Files (*.bmp)|*.bmp",
-                        Title = "Сохранить скриншот",
-                        DefaultExt = "bmp",
-                        AddExtension = true
-                    };
+                    // Получение пути к папке с .exe
+                    string exePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                    string datePrefix = DateTime.Now.ToString("dd.MM.yyyy");
+                    int nextNumber = 1;
 
-                    if (saveDialog.ShowDialog() == true)
+                    // Поиск следующего доступного номера
+                    string[] existingFiles = Directory.GetFiles(exePath, $"{datePrefix} - *.bmp");
+                    if (existingFiles.Length > 0)
                     {
-                        bitmap.Save(saveDialog.FileName, ImageFormat.Bmp);
-                        MessageBox.Show("Скриншот успешно сохранен!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                        nextNumber = existingFiles
+                            .Select(f => Path.GetFileNameWithoutExtension(f).Split('-').Last().Trim())
+                            .Select(n => int.TryParse(n, out int num) ? num : 0)
+                            .DefaultIfEmpty(0)
+                            .Max() + 1;
                     }
+
+                    // Формирование имени файла
+                    string fileName = $"{datePrefix} - {nextNumber:D3}.bmp";
+                    string filePath = Path.Combine(exePath, fileName);
+
+                    // Сохранение скриншота
+                    bitmap.Save(filePath, ImageFormat.Bmp);
                 }
 
                 DeleteObject(hBitmap);
             }
-            catch (Exception ex)
+            catch
             {
-                MessageBox.Show($"Ошибка при захвате скриншота: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Игнорируем ошибки
             }
         }
 

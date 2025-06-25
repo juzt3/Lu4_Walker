@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows.Forms;
 
 namespace LU4_Walker
 {
-    public static class PixelColorChecker
+    public static class ScreenshotMaker
     {
         // Импорт функций WinAPI
         [DllImport("user32.dll")]
@@ -46,22 +49,13 @@ namespace LU4_Walker
         }
 
         /// <summary>
-        /// Проверяет цвет пикселя в окне по дескриптору окна и возвращает значение красной компоненты (R).
+        /// Снимает скриншот клиентской области окна и сохраняет его как BMP.
         /// </summary>
-        /// <param name="hWnd">Дескриптор окна процесса.</param>
-        /// <param name="x">Координата X (в пределах клиентской области).</param>
-        /// <param name="y">Координата Y (в пределах клиентской области).</param>
-        /// <returns>Значение красной компоненты (0–255) или -1 при ошибке.</returns>
-        public static int CheckPixelColor(IntPtr hWnd, int x, int y)
+        /// <param name="hWnd">Дескриптор окна.</param>
+        public static void TakeScreenshot(IntPtr hWnd)
         {
             try
             {
-                // Проверка валидности дескриптора окна
-                if (hWnd == IntPtr.Zero)
-                {
-                    return -1;
-                }
-
                 // Проверка, минимизировано ли окно, и восстановление
                 if (IsIconic(hWnd))
                 {
@@ -77,7 +71,14 @@ namespace LU4_Walker
                 // Получение размеров клиентской области
                 if (!GetClientRect(hWnd, out RECT clientRect))
                 {
-                    return -1;
+                    return;
+                }
+
+                // Преобразование координат клиентской области в экранные
+                POINT topLeft = new POINT { X = clientRect.Left, Y = clientRect.Top };
+                if (!ClientToScreen(hWnd, ref topLeft))
+                {
+                    return;
                 }
 
                 int width = clientRect.Right - clientRect.Left;
@@ -85,24 +86,11 @@ namespace LU4_Walker
 
                 if (width <= 0 || height <= 0)
                 {
-                    return -1;
+                    return;
                 }
 
-                // Проверка введённых координат
-                if (x < 0 || x >= width || y < 0 || y >= height)
-                {
-                    return -1;
-                }
-
-                // Преобразование координат клиентской области в экранные
-                POINT topLeft = new POINT { X = x, Y = y };
-                if (!ClientToScreen(hWnd, ref topLeft))
-                {
-                    return -1;
-                }
-
-                // Захват пикселя
-                using (Bitmap bitmap = new Bitmap(1, 1))
+                // Захват скриншота клиентской области
+                using (Bitmap bitmap = new Bitmap(width, height))
                 {
                     using (Graphics graphics = Graphics.FromImage(bitmap))
                     {
@@ -111,18 +99,39 @@ namespace LU4_Walker
                         float dpiScaleY = graphics.DpiY / 96.0f;
                         int scaledX = (int)(topLeft.X / dpiScaleX);
                         int scaledY = (int)(topLeft.Y / dpiScaleY);
+                        int scaledWidth = (int)(width / dpiScaleX);
+                        int scaledHeight = (int)(height / dpiScaleY);
 
-                        graphics.CopyFromScreen(scaledX, scaledY, 0, 0, new System.Drawing.Size(1, 1));
+                        graphics.CopyFromScreen(scaledX, scaledY, 0, 0, new System.Drawing.Size(scaledWidth, scaledHeight));
                     }
-                    Color pixelColor = bitmap.GetPixel(0, 0);
 
-                    // Возвращаем значение красной компоненты
-                    return pixelColor.R;
+                    // Получение пути к папке с .exe
+                    string exePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                    string datePrefix = DateTime.Now.ToString("dd.MM.yyyy");
+                    int nextNumber = 1;
+
+                    // Поиск следующего доступного номера
+                    string[] existingFiles = Directory.GetFiles(exePath, $"{datePrefix} - *.bmp");
+                    if (existingFiles.Length > 0)
+                    {
+                        nextNumber = existingFiles
+                            .Select(f => Path.GetFileNameWithoutExtension(f).Split('-').Last().Trim())
+                            .Select(n => int.TryParse(n, out int num) ? num : 0)
+                            .DefaultIfEmpty(0)
+                            .Max() + 1;
+                    }
+
+                    // Формирование имени файла
+                    string fileName = $"{datePrefix} - {nextNumber:D3}.bmp";
+                    string filePath = Path.Combine(exePath, fileName);
+
+                    // Сохранение скриншота
+                    bitmap.Save(filePath, ImageFormat.Bmp);
                 }
             }
             catch
             {
-                return -1; // Ошибка
+                // Игнорируем ошибки
             }
         }
     }

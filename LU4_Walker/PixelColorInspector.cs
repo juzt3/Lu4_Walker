@@ -2,11 +2,11 @@
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows.Forms;
+using System.Windows.Controls;
 
 namespace LU4_Walker
 {
-    public static class PixelColorChecker
+    public static class PixelColorInspector
     {
         // Импорт функций WinAPI
         [DllImport("user32.dll")]
@@ -46,20 +46,21 @@ namespace LU4_Walker
         }
 
         /// <summary>
-        /// Проверяет цвет пикселя в окне по дескриптору окна и возвращает значение красной компоненты (R).
+        /// Проверяет цвет пикселя в окне по координатам X, Y и возвращает значение красной компоненты (R).
         /// </summary>
         /// <param name="hWnd">Дескриптор окна процесса.</param>
-        /// <param name="x">Координата X (в пределах клиентской области).</param>
-        /// <param name="y">Координата Y (в пределах клиентской области).</param>
-        /// <returns>Значение красной компоненты (0–255) или -1 при ошибке.</returns>
-        public static int CheckPixelColor(IntPtr hWnd, int x, int y)
+        /// <param name="xText">Текст координаты X.</param>
+        /// <param name="yText">Текст координаты Y.</param>
+        /// <param name="textBox">TextBlock для вывода результата.</param>
+        public static void InspectPixelColor(IntPtr hWnd, string xText, string yText, TextBlock textBox)
         {
             try
             {
                 // Проверка валидности дескриптора окна
                 if (hWnd == IntPtr.Zero)
                 {
-                    return -1;
+                    textBox.Text = "";
+                    return;
                 }
 
                 // Проверка, минимизировано ли окно, и восстановление
@@ -74,10 +75,18 @@ namespace LU4_Walker
                 // Задержка для рендеринга окна
                 Thread.Sleep(50);
 
+                // Проверка введённых координат
+                if (!int.TryParse(xText, out int x) || !int.TryParse(yText, out int y))
+                {
+                    textBox.Text = "";
+                    return;
+                }
+
                 // Получение размеров клиентской области
                 if (!GetClientRect(hWnd, out RECT clientRect))
                 {
-                    return -1;
+                    textBox.Text = "";
+                    return;
                 }
 
                 int width = clientRect.Right - clientRect.Left;
@@ -85,20 +94,23 @@ namespace LU4_Walker
 
                 if (width <= 0 || height <= 0)
                 {
-                    return -1;
+                    textBox.Text = "";
+                    return;
                 }
 
                 // Проверка введённых координат
                 if (x < 0 || x >= width || y < 0 || y >= height)
                 {
-                    return -1;
+                    textBox.Text = "";
+                    return;
                 }
 
                 // Преобразование координат клиентской области в экранные
                 POINT topLeft = new POINT { X = x, Y = y };
                 if (!ClientToScreen(hWnd, ref topLeft))
                 {
-                    return -1;
+                    textBox.Text = "";
+                    return;
                 }
 
                 // Захват пикселя
@@ -116,13 +128,13 @@ namespace LU4_Walker
                     }
                     Color pixelColor = bitmap.GetPixel(0, 0);
 
-                    // Возвращаем значение красной компоненты
-                    return pixelColor.R;
+                    // Выводим только значение красной компоненты
+                    textBox.Text = $"R: {pixelColor.R}";
                 }
             }
             catch
             {
-                return -1; // Ошибка
+                textBox.Text = "";
             }
         }
     }

@@ -60,6 +60,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="MonsterFinder.cs" />
+    <Compile Include="PixelColorInspector.cs" />
+    <Compile Include="RedPixelChecker.cs" />
+    <Compile Include="ScreenshotMaker.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

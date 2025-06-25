@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Windows.Interop;
 using System.Threading;
 using System.Windows.Forms;
+using System.Threading.Tasks;
 
 namespace LU4_Walker
 {
@@ -21,9 +22,6 @@ namespace LU4_Walker
         // Импорт функций WinAPI
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-
-        [DllImport("user32.dll")]
-        private static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
@@ -49,20 +47,70 @@ namespace LU4_Walker
         [DllImport("user32.dll")]
         private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
+        [DllImport("user32.dll")]
+        private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, IntPtr dwExtraInfo);
+
         // Константы для сообщений Windows
         private const uint WM_KEYDOWN = 0x0100;
-        private const int VK_NUM_DIV = 0x6F; // Код клавиши NumPad Divide
         private const int HOTKEY_ID_SCREENSHOT = 0x9000; // ID для Ctrl + F12
         private const int HOTKEY_ID_START = 0x9001; // ID для Page Up
         private const int HOTKEY_ID_STOP = 0x9002; // ID для Page Down
         private const int HOTKEY_ID_CHECK_PIXEL = 0x9003; // ID для End
         private const uint MOD_CONTROL = 0x0002; // Модификатор Ctrl
-        private const uint VK_F12 = 0x7B; // Код клавиши F12
-        private const uint VK_PAGE_UP = 0x21; // Код клавиши Page Up
-        private const uint VK_PAGE_DOWN = 0x22; // Код клавиши Page Down
-        private const uint VK_END = 0x23; // Код клавиши End
         private const int WM_HOTKEY = 0x0312; // Сообщение для горячей клавиши
         private const int SW_RESTORE = 9; // Флаг для восстановления окна
+
+        // Константы для keybd_event
+        private const uint KEYEVENTF_KEYDOWN = 0x0000;
+        private const uint KEYEVENTF_KEYUP = 0x0002;
+
+        // Виртуальные коды клавиш и сообщения мыши
+        private static ushort VK_F1 = 0x70;
+        private static ushort VK_F2 = 0x71;
+        private static ushort VK_F3 = 0x72;
+        private static ushort VK_F4 = 0x73;
+        private static ushort VK_F5 = 0x74;
+        private static ushort VK_F6 = 0x75;
+        private static ushort VK_F7 = 0x76;
+        private static ushort VK_F8 = 0x77;
+        private static ushort VK_F9 = 0x78;
+        private static ushort VK_F10 = 0x79;
+        private static ushort VK_F11 = 0x7A;
+        private static ushort VK_F12 = 0x7B;
+        private static ushort VK_ESC = 0x1B;
+        private static ushort VK_PAGE_UP = 0x21;
+        private static ushort VK_PAGE_DOWN = 0x22;
+        private static ushort VK_END = 0x23;
+        private static ushort WM_LBUTTONDOWN = 0x0201;
+        private static ushort WM_LBUTTONUP = 0x0202;
+        private const uint MK_LBUTTON = 0x0001;
+        private const uint MK_RBUTTON = 0x0002;
+        private static ushort WM_RBUTTONDOWN = 0x0204;
+        private static ushort WM_RBUTTONUP = 0x0205;
+        private static ushort VK_1 = 0x31;
+        private static ushort VK_2 = 0x32;
+        private static ushort VK_3 = 0x33;
+        private static ushort VK_4 = 0x34;
+        private static ushort VK_5 = 0x35;
+        private static ushort VK_6 = 0x36;
+        private static ushort VK_7 = 0x37;
+        private static ushort VK_8 = 0x38;
+        private static ushort VK_9 = 0x39;
+        private static ushort VK_0 = 0x30;
+        private static ushort VK_MINUS = 0xBD;
+        private static ushort VK_PLUS = 0xBB;
+        private static ushort VK_NUM1 = 0x61;
+        private static ushort VK_NUM2 = 0x62;
+        private static ushort VK_NUM3 = 0x63;
+        private static ushort VK_NUM4 = 0x64;
+        private static ushort VK_NUM5 = 0x65;
+        private static ushort VK_NUM6 = 0x66;
+        private static ushort VK_NUM7 = 0x67;
+        private static ushort VK_NUM8 = 0x68;
+        private static ushort VK_NUM9 = 0x69;
+        private static ushort VK_NUM0 = 0x60;
+        private static ushort VK_NUM_MULT = 0x6A;
+        private static ushort VK_NUM_DIV = 0x6F;
 
         // Структура для хранения координат окна
         [StructLayout(LayoutKind.Sequential)]
@@ -82,10 +130,11 @@ namespace LU4_Walker
             public int Y;
         }
 
-        private DispatcherTimer findMonster;
+        private DispatcherTimer checkRedPixelTimer;
         private Dictionary<string, IntPtr> lu4Windows;
         private HwndSource hwndSource;
-        private IntPtr selectedHwnd = IntPtr.Zero; // Хранит дескриптор текущего окна
+        private IntPtr selectedHwnd = IntPtr.Zero; // Хранит дескриптор второго окна
+        private readonly object hwndLock = new object(); // Для потокобезопасного доступа к selectedHwnd
 
         public MainWindow()
         {
@@ -99,9 +148,9 @@ namespace LU4_Walker
 
         private void InitializeTimer()
         {
-            findMonster = new DispatcherTimer();
-            findMonster.Tick += new EventHandler(findMonster_Tick);
-            findMonster.Interval = new TimeSpan(0, 0, 0, 0, 200);
+            checkRedPixelTimer = new DispatcherTimer();
+            checkRedPixelTimer.Tick += new EventHandler(CheckRedPixelTimer_Tick);
+            checkRedPixelTimer.Interval = TimeSpan.FromMilliseconds(1000); // Задержка 1000 мс
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -188,19 +237,17 @@ namespace LU4_Walker
             lu4Windows = new Dictionary<string, IntPtr>();
             ProcessComboBox.Items.Clear(); // Очистка текущего списка
 
-            Process[] processes = Process.GetProcesses();
-            foreach (Process proc in processes)
-            {
-                if (proc.MainWindowTitle.Contains("LU4") && proc.MainWindowHandle != IntPtr.Zero && proc.MainWindowTitle != "LU4 Walker")
-                {
-                    string displayName = $"{proc.MainWindowTitle} (PID: {proc.Id})";
-                    lu4Windows.Add(displayName, proc.MainWindowHandle);
-                    ProcessComboBox.Items.Add(displayName);
-                }
-            }
+            Process[] processes = Process.GetProcesses()
+                .Where(proc => proc.MainWindowTitle.Contains("LU4") && proc.MainWindowHandle != IntPtr.Zero && proc.MainWindowTitle != "LU4 Walker")
+                .OrderBy(proc => proc.Id) // Сортировка по PID для предсказуемости
+                .ToArray();
 
-            if (lu4Windows.Count > 0)
+            if (processes.Length > 1) // Выбираем второй процесс LU4
             {
+                Process secondProcess = processes[1];
+                string displayName = $"{secondProcess.MainWindowTitle} (PID: {secondProcess.Id})";
+                lu4Windows.Add(displayName, secondProcess.MainWindowHandle);
+                ProcessComboBox.Items.Add(displayName);
                 ProcessComboBox.SelectedIndex = 0;
                 StartButton.IsEnabled = true;
                 ScreenshotButton.IsEnabled = true;
@@ -211,20 +258,81 @@ namespace LU4_Walker
                 StartButton.IsEnabled = false;
                 ScreenshotButton.IsEnabled = false;
                 CheckPixelColorButton.IsEnabled = false;
-                PixelColorTextBox.Text = "";
+                PixelColorTextBox.Text = "Второй процесс LU4 не найден";
             }
         }
 
-        private void findMonster_Tick(object sender, EventArgs e)
+        private void SendKeyPress(byte virtualKey)
         {
-            if (selectedHwnd != IntPtr.Zero)
+            // Нажатие клавиши
+            keybd_event((byte)virtualKey, 0, KEYEVENTF_KEYDOWN, IntPtr.Zero);
+            Thread.Sleep(10); // Короткая задержка для обработки нажатия
+            // Отпускание клавиши
+            keybd_event((byte)virtualKey, 0, KEYEVENTF_KEYUP, IntPtr.Zero);
+        }
+
+        private async void CheckRedPixelTimer_Tick(object sender, EventArgs e)
+        {
+            IntPtr currentHwnd;
+            lock (hwndLock)
             {
-                int r = PixelColorChecker.CheckPixelColor("R", selectedHwnd, 300, 76);
-                if (r == 144)
-                {
-                    PostMessage(selectedHwnd, WM_KEYDOWN, VK_NUM_DIV, 0);
-                }
+                currentHwnd = selectedHwnd;
             }
+
+            if (currentHwnd == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Проверка пикселя в фоновом потоке
+            var (found, x, y) = await Task.Run(() => PixelColorChecker.FindFirstRedPixel(currentHwnd));
+
+            // Отправка клавиш в основном потоке
+            await Dispatcher.InvokeAsync(() =>
+            {
+                // Проверяем, минимизировано ли окно, и восстанавливаем
+                if (IsIconic(currentHwnd))
+                {
+                    ShowWindow(currentHwnd, SW_RESTORE);
+                }
+
+                // Активируем окно перед отправкой клавиш
+                SetForegroundWindow(currentHwnd);
+                Thread.Sleep(50); // Даём время на фокусировку
+
+                if (found)
+                {
+                    // Красный пиксель найден, отправляем 1–5
+                    PixelColorTextBox.Text = $"Red pixel found at ({x}, {y}), sending 1–5";
+                    SendKeyPress((byte)VK_1);
+                    Thread.Sleep(100); // Задержка 100 мс
+                    SendKeyPress((byte)VK_2);
+                    Thread.Sleep(100);
+                    SendKeyPress((byte)VK_3);
+                    Thread.Sleep(100);
+                    SendKeyPress((byte)VK_4);
+                    Thread.Sleep(100);
+                    SendKeyPress((byte)VK_5);
+                }
+                else
+                {
+                    // Красный пиксель не найден, отправляем 6–=
+                    PixelColorTextBox.Text = "No red pixel found, sending 6–=";
+                    SendKeyPress((byte)VK_6);
+                    Thread.Sleep(100);
+                    SendKeyPress((byte)VK_7);
+                    Thread.Sleep(100);
+                    SendKeyPress((byte)VK_8);
+                    Thread.Sleep(100);
+                    SendKeyPress((byte)VK_9);
+                    Thread.Sleep(100);
+                    SendKeyPress((byte)VK_0);
+                    Thread.Sleep(100);
+                    SendKeyPress((byte)VK_MINUS);
+                    Thread.Sleep(100);
+                    SendKeyPress((byte)VK_PLUS);
+                }
+            });
         }
 
         private void StartButton_Click(object sender, RoutedEventArgs e)
@@ -232,9 +340,12 @@ namespace LU4_Walker
             if (ProcessComboBox.SelectedItem != null)
             {
                 string selectedWindow = ProcessComboBox.SelectedItem.ToString();
-                selectedHwnd = lu4Windows[selectedWindow];
+                lock (hwndLock)
+                {
+                    selectedHwnd = lu4Windows[selectedWindow];
+                }
                 ProcessComboBox.IsEnabled = false; // Блокировка ComboBox
-                findMonster.Start();
+                checkRedPixelTimer.Start();
                 StartButton.Visibility = Visibility.Collapsed;
                 StopButton.Visibility = Visibility.Visible;
                 Topmost = false; // Окно на задний план
@@ -244,8 +355,11 @@ namespace LU4_Walker
 
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
-            findMonster.Stop();
-            selectedHwnd = IntPtr.Zero; // Очистка дескриптора
+            checkRedPixelTimer.Stop();
+            lock (hwndLock)
+            {
+                selectedHwnd = IntPtr.Zero; // Очистка дескриптора
+            }
             ProcessComboBox.IsEnabled = true; // Разблокировка ComboBox
             StartButton.Visibility = Visibility.Visible;
             StopButton.Visibility = Visibility.Collapsed;
@@ -256,16 +370,19 @@ namespace LU4_Walker
 
         private void ProcessComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (findMonster.IsEnabled)
+            if (checkRedPixelTimer.IsEnabled)
             {
-                findMonster.Stop();
-                selectedHwnd = IntPtr.Zero; // Очистка дескриптора
+                checkRedPixelTimer.Stop();
+                lock (hwndLock)
+                {
+                    selectedHwnd = IntPtr.Zero; // Очистка дескриптора
+                }
                 ProcessComboBox.IsEnabled = true; // Разблокировка ComboBox
                 StartButton.Visibility = Visibility.Visible;
                 StopButton.Visibility = Visibility.Collapsed;
                 Topmost = true; // Окно поверх всех
                 WindowState = WindowState.Normal; // Восстановление окна
-                PixelColorTextBox.Text = ""; // Очистка поля цвета
+                PixelColorTextBox.Text = "";
             }
         }
 

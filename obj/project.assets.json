@@ -242,11 +242,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\wtopm\\source\\repos\\LU4_Walker\\LU4_Walker.csproj",
+      "projectUniqueName": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker.csproj",
       "projectName": "LU4_Walker",
-      "projectPath": "C:\\Users\\wtopm\\source\\repos\\LU4_Walker\\LU4_Walker.csproj",
+      "projectPath": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker.csproj",
       "packagesPath": "C:\\Users\\wtopm\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\wtopm\\source\\repos\\LU4_Walker\\obj\\",
+      "outputPath": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

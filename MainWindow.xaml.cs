@@ -12,25 +12,22 @@ namespace LU4_Walker
 {
     public partial class MainWindow : Window
     {
-        // WinAPI для отправки сообщений, перемещения курсора и снятия скринов
+        // WinAPI для сообщений, курсора, скринов и чтения пикселя
         [DllImport("user32.dll")] static extern bool PostMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
         [DllImport("user32.dll")] static extern bool SetCursorPos(int X, int Y);
         [DllImport("user32.dll")] static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
         [DllImport("user32.dll")] static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
+        [DllImport("user32.dll")] static extern IntPtr GetDC(IntPtr hWnd);
+        [DllImport("user32.dll")] static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+        [DllImport("gdi32.dll")] static extern uint GetPixel(IntPtr hdc, int X, int Y);
 
-        // Коды сообщений и клавиш
         private const int WM_KEYDOWN = 0x0100;
         private const int WM_KEYUP = 0x0101;
         private const int VK_1 = 0x31;
 
-        // Структуры для координат
-        [StructLayout(LayoutKind.Sequential)]
-        struct POINT { public int X, Y; }
+        [StructLayout(LayoutKind.Sequential)] struct POINT { public int X, Y; }
+        [StructLayout(LayoutKind.Sequential)] struct RECT { public int Left, Top, Right, Bottom; }
 
-        [StructLayout(LayoutKind.Sequential)]
-        struct RECT { public int Left, Top, Right, Bottom; }
-
-        // Таймеры для OCR и нажатия "1"
         private readonly DispatcherTimer ocrTimer = new();
         private readonly DispatcherTimer keyTimer = new();
         private IntPtr targetHwnd;
@@ -40,14 +37,14 @@ namespace LU4_Walker
             InitializeComponent();
 
             ocrTimer.Interval = TimeSpan.FromSeconds(5);
-            ocrTimer.Tick += (s, e) =>
+            ocrTimer.Tick += (_, __) =>
             {
                 if (targetHwnd != IntPtr.Zero)
                     RunOcrAndAim(targetHwnd);
             };
 
             keyTimer.Interval = TimeSpan.FromSeconds(5);
-            keyTimer.Tick += (s, e) =>
+            keyTimer.Tick += (_, __) =>
             {
                 if (targetHwnd != IntPtr.Zero)
                 {
@@ -57,7 +54,6 @@ namespace LU4_Walker
             };
         }
 
-        // Заполняем ComboBox окнами, в названии которых есть "lu4"
         private void cbWindows_DropDownOpened(object sender, EventArgs e)
         {
             cbWindows.Items.Clear();
@@ -71,7 +67,6 @@ namespace LU4_Walker
             }
         }
 
-        // Нажатие Старт
         private void btnStart_Click(object sender, RoutedEventArgs e)
         {
             if (cbWindows.SelectedItem is not WindowItem wi)
@@ -83,77 +78,54 @@ namespace LU4_Walker
             targetHwnd = wi.Hwnd;
             ocrTimer.Start();
             keyTimer.Start();
-
             btnStart.IsEnabled = false;
             btnStop.IsEnabled = true;
         }
 
-        // Нажатие Стоп
         private void btnStop_Click(object sender, RoutedEventArgs e)
         {
             ocrTimer.Stop();
             keyTimer.Stop();
             targetHwnd = IntPtr.Zero;
-
             btnStart.IsEnabled = true;
             btnStop.IsEnabled = false;
         }
 
-        // Кнопка "Скриншот" — снимаем полное окно игры и сохраняем .bmp
+        // Сохранить обычный скриншот окна
         private void btnScreenshot_Click(object sender, RoutedEventArgs e)
         {
-            // если ещё не сделали старт, пытаемся взять окно из ComboBox
-            IntPtr hwnd = targetHwnd;
-            if (hwnd == IntPtr.Zero && cbWindows.SelectedItem is WindowItem wi)
-                hwnd = wi.Hwnd;
-
-            if (hwnd == IntPtr.Zero)
-            {
-                MessageBox.Show("Окно игры не выбрано.");
-                return;
-            }
+            IntPtr hwnd = GetEffectiveHwnd();
+            if (hwnd == IntPtr.Zero) { MessageBox.Show("Окно игры не выбрано."); return; }
 
             if (!GetClientRect(hwnd, out RECT rect)) return;
-
-            POINT tl = new() { X = 0, Y = 0 };
+            var tl = new POINT { X = 0, Y = 0 };
             if (!ClientToScreen(hwnd, ref tl)) return;
 
-            int width = rect.Right - rect.Left;
-            int height = rect.Bottom - rect.Top;
-
-            using Bitmap bmp = new(width, height);
+            int w = rect.Right - rect.Left;
+            int h = rect.Bottom - rect.Top;
+            using var bmp = new Bitmap(w, h);
             using var g = Graphics.FromImage(bmp);
             g.CopyFromScreen(tl.X, tl.Y, 0, 0, bmp.Size);
 
-            string name = DateTime.Now.ToString("yyyy-MM-dd - HH-mm-ss") + ".bmp";
+            string name = $"{DateTime.Now:yyyy-MM-dd - HH-mm-ss}.bmp";
             string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, name);
             bmp.Save(path, System.Drawing.Imaging.ImageFormat.Bmp);
-
             MessageBox.Show($"Скриншот сохранён:\n{name}");
         }
 
-        // Кнопка "OCR-Скрин" — выделяем текст и сохраняем .bmp
+        // Сохранить OCR-скриншот с рамками
         private void btnOcrScreenshot_Click(object sender, RoutedEventArgs e)
         {
-            IntPtr hwnd = targetHwnd;
-            if (hwnd == IntPtr.Zero && cbWindows.SelectedItem is WindowItem wi)
-                hwnd = wi.Hwnd;
-
-            if (hwnd == IntPtr.Zero)
-            {
-                MessageBox.Show("Окно игры не выбрано.");
-                return;
-            }
+            IntPtr hwnd = GetEffectiveHwnd();
+            if (hwnd == IntPtr.Zero) { MessageBox.Show("Окно игры не выбрано."); return; }
 
             if (!GetClientRect(hwnd, out RECT rect)) return;
-
-            POINT tl = new() { X = 0, Y = 0 };
+            var tl = new POINT { X = 0, Y = 0 };
             if (!ClientToScreen(hwnd, ref tl)) return;
 
-            int width = rect.Right - rect.Left;
-            int height = rect.Bottom - rect.Top;
-
-            using Bitmap bmp = new(width, height);
+            int w = rect.Right - rect.Left;
+            int h = rect.Bottom - rect.Top;
+            using var bmp = new Bitmap(w, h);
             using var g = Graphics.FromImage(bmp);
             g.CopyFromScreen(tl.X, tl.Y, 0, 0, bmp.Size);
 
@@ -161,8 +133,8 @@ namespace LU4_Walker
             using var pix = Pix.LoadFromMemory(BitmapToBytes(bmp));
             using var page = engine.Process(pix);
             using var iter = page.GetIterator();
-
             iter.Begin();
+
             using var pen = new Pen(Color.Red, 2);
             do
             {
@@ -171,35 +143,57 @@ namespace LU4_Walker
             }
             while (iter.Next(PageIteratorLevel.Word));
 
-            string name = DateTime.Now.ToString("yyyy-MM-dd - HH-mm-ss") + " - OCR.bmp";
+            string name = $"{DateTime.Now:yyyy-MM-dd - HH-mm-ss} - OCR.bmp";
             string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, name);
             bmp.Save(path, System.Drawing.Imaging.ImageFormat.Bmp);
-
             MessageBox.Show($"OCR-скрин сохранён:\n{name}");
         }
 
-        // OCR-скан и прицеливание мыши на случайный текст
+        // Получить значение R-канала пикселя
+        private void btnGetR_Click(object sender, RoutedEventArgs e)
+        {
+            IntPtr hwnd = GetEffectiveHwnd();
+            if (hwnd == IntPtr.Zero) { MessageBox.Show("Окно игры не выбрано."); return; }
+
+            if (!int.TryParse(tbX.Text, out int x) ||
+                !int.TryParse(tbY.Text, out int y))
+            {
+                MessageBox.Show("Введите корректные X и Y."); return;
+            }
+
+            var tl = new POINT { X = 0, Y = 0 };
+            GetClientRect(hwnd, out _);
+            ClientToScreen(hwnd, ref tl);
+            int screenX = tl.X + x;
+            int screenY = tl.Y + y;
+
+            IntPtr hdc = GetDC(hwnd);
+            uint color = GetPixel(hdc, screenX, screenY);
+            ReleaseDC(hwnd, hdc);
+            int R = (int)((color >> 16) & 0xFF);
+
+            lblR.Text = R.ToString();
+        }
+
+        // OCR-скан и наведение курсора: центр + 5 пикселей вниз
         private void RunOcrAndAim(IntPtr hWnd)
         {
             try
             {
                 if (!GetClientRect(hWnd, out RECT rect)) return;
+                var tl = new POINT { X = 0, Y = 0 };
+                if (!ClientToScreen(hWnd, ref tl)) return;
 
                 int width = rect.Right - rect.Left;
                 int height = rect.Bottom - rect.Top;
-
-                POINT tl = new() { X = 0, Y = 0 };
-                if (!ClientToScreen(hWnd, ref tl)) return;
-
                 int cropLeft = (int)(width * 0.18);
                 int cropTop = (int)(height * 0.08);
                 int cropRight = width - (int)(width * 0.02);
                 int cropBottom = height - (int)(height * 0.12);
+                int cropW = cropRight - cropLeft;
+                int cropH = cropBottom - cropTop;
 
-                int cropWidth = cropRight - cropLeft;
-                int cropHeight = cropBottom - cropTop;
-
-                using Bitmap bmp = new(cropWidth, cropHeight);
+                using var bmp = new Bitmap(cropW, cropH);
                 using var g = Graphics.FromImage(bmp);
                 g.CopyFromScreen(tl.X + cropLeft, tl.Y + cropTop, 0, 0, bmp.Size);
 
@@ -207,39 +201,37 @@ namespace LU4_Walker
                 using var pix = Pix.LoadFromMemory(BitmapToBytes(bmp));
                 using var page = engine.Process(pix);
                 using var iter = page.GetIterator();
-
                 iter.Begin();
-                List<(int X, int Y)> centers = new();
+
+                var centers = new List<(int X, int Y)>();
                 do
                 {
-                    string txt = iter.GetText(PageIteratorLevel.Word);
-                    if (!string.IsNullOrWhiteSpace(txt) &&
+                    if (!string.IsNullOrWhiteSpace(iter.GetText(PageIteratorLevel.Word)) &&
                         iter.TryGetBoundingBox(PageIteratorLevel.Word, out var bbox))
                     {
-                        int cx = bbox.X1 + bbox.Width / 2;
-                        int cy = bbox.Y1 + bbox.Height / 2;
+                        int cx = bbox.X1 + bbox.Width / 2 - 10;  // смещение влево на 10px
+                        int cy = bbox.Y1 + bbox.Height / 2 + 25;  // смещение вниз на 25px
                         centers.Add((cx, cy));
                     }
                 }
                 while (iter.Next(PageIteratorLevel.Word));
 
                 if (centers.Count == 0) return;
+                var t = centers[new Random().Next(centers.Count)];
 
-                var rnd = new Random();
-                var target = centers[rnd.Next(centers.Count)];
-
-                int screenX = tl.X + cropLeft + target.X;
-                int screenY = tl.Y + cropTop + target.Y;
-
+                int screenX = tl.X + cropLeft + t.X;
+                int screenY = tl.Y + cropTop + t.Y;
                 SetCursorPos(screenX, screenY);
             }
             catch
             {
-                // Игнорируем ошибки OCR
+                // игнорируем ошибки
             }
         }
 
-        // Конвертация Bitmap в байты для Tesseract
+
+
+
         private byte[] BitmapToBytes(Bitmap bmp)
         {
             using var ms = new MemoryStream();
@@ -247,17 +239,30 @@ namespace LU4_Walker
             return ms.ToArray();
         }
 
-        // Класс для ComboBox
         private class WindowItem
         {
             public IntPtr Hwnd { get; }
             public string Title { get; }
-            public WindowItem(IntPtr hwnd, string title)
-            {
-                Hwnd = hwnd;
-                Title = title;
-            }
+            public WindowItem(IntPtr hwnd, string title) { Hwnd = hwnd; Title = title; }
             public override string ToString() => $"{Title} [{Hwnd}]";
         }
+
+        private IntPtr GetEffectiveHwnd()
+        {
+            if (targetHwnd != IntPtr.Zero) return targetHwnd;
+            if (cbWindows.SelectedItem is WindowItem wi) return wi.Hwnd;
+            return IntPtr.Zero;
+        }
+        private void btnClose_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+
+        private void Window_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            this.DragMove();
+        }
+
+
     }
 }

@@ -1,0 +1,47 @@
+﻿<Window x:Class="LU4_Walker.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="LU4 Walker" Height="220" Width="360">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Выбор окна игры -->
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,10">
+            <Label Content="Окно LU4:" Width="70"/>
+            <ComboBox x:Name="cbWindows"
+                Width="250"
+                DropDownOpened="cbWindows_DropDownOpened"/>
+        </StackPanel>
+
+        <!-- Старт/Стоп автосканирования и нажатия "1" -->
+        <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Center">
+            <Button x:Name="btnStart"
+              Content="Старт"
+              Width="100"
+              Margin="0,0,10,0"
+              Click="btnStart_Click"/>
+            <Button x:Name="btnStop"
+              Content="Стоп"
+              Width="100"
+              Click="btnStop_Click"
+              IsEnabled="False"/>
+        </StackPanel>
+
+        <!-- Скриншот и OCR-скрин -->
+        <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" Margin="0,10,0,0">
+            <Button x:Name="btnScreenshot"
+              Content="Скриншот"
+              Width="100"
+              Margin="0,0,10,0"
+              Click="btnScreenshot_Click"/>
+            <Button x:Name="btnOcrScreenshot"
+              Content="OCR-Скрин"
+              Width="100"
+              Click="btnOcrScreenshot_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

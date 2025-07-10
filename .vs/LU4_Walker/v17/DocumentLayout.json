@@ -1,34 +1,14 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\",
+  "WorkspaceRootPath": "C:\\Users\\wtopm\\source\\repos\\LU4_Walker\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{7CFB8241-11BF-470D-88AE-EF4175D7AE2D}|LU4_Walker\\LU4_Walker.csproj|C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\lu4_walker\\redpixelchecker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{7CFB8241-11BF-470D-88AE-EF4175D7AE2D}|LU4_Walker\\LU4_Walker.csproj|solutionrelative:lu4_walker\\redpixelchecker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|c:\\users\\wtopm\\source\\repos\\lu4_walker\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|solutionrelative:mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{7CFB8241-11BF-470D-88AE-EF4175D7AE2D}|LU4_Walker\\LU4_Walker.csproj|C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\lu4_walker\\monsterfinder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{7CFB8241-11BF-470D-88AE-EF4175D7AE2D}|LU4_Walker\\LU4_Walker.csproj|solutionrelative:lu4_walker\\monsterfinder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{7CFB8241-11BF-470D-88AE-EF4175D7AE2D}|LU4_Walker\\LU4_Walker.csproj|C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\lu4_walker\\pixelcolorinspector.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{7CFB8241-11BF-470D-88AE-EF4175D7AE2D}|LU4_Walker\\LU4_Walker.csproj|solutionrelative:lu4_walker\\pixelcolorinspector.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{7CFB8241-11BF-470D-88AE-EF4175D7AE2D}|LU4_Walker\\LU4_Walker.csproj|c:\\users\\wtopm\\documents\\github\\lu4_walker\\lu4_walker\\screenshotmaker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{7CFB8241-11BF-470D-88AE-EF4175D7AE2D}|LU4_Walker\\LU4_Walker.csproj|solutionrelative:lu4_walker\\screenshotmaker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{7CFB8241-11BF-470D-88AE-EF4175D7AE2D}|LU4_Walker\\LU4_Walker.csproj|C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\lu4_walker\\pixelcolorchecker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{7CFB8241-11BF-470D-88AE-EF4175D7AE2D}|LU4_Walker\\LU4_Walker.csproj|solutionrelative:lu4_walker\\pixelcolorchecker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{7CFB8241-11BF-470D-88AE-EF4175D7AE2D}|LU4_Walker\\LU4_Walker.csproj|C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\lu4_walker\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{7CFB8241-11BF-470D-88AE-EF4175D7AE2D}|LU4_Walker\\LU4_Walker.csproj|solutionrelative:lu4_walker\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{7CFB8241-11BF-470D-88AE-EF4175D7AE2D}|LU4_Walker\\LU4_Walker.csproj|C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\lu4_walker\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{7CFB8241-11BF-470D-88AE-EF4175D7AE2D}|LU4_Walker\\LU4_Walker.csproj|solutionrelative:lu4_walker\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+      "AbsoluteMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|c:\\users\\wtopm\\source\\repos\\lu4_walker\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|solutionrelative:mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     }
   ],
   "DocumentGroupContainers": [
@@ -38,96 +18,31 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "MonsterFinder.cs",
-              "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker\\MonsterFinder.cs",
-              "RelativeDocumentMoniker": "LU4_Walker\\MonsterFinder.cs",
-              "ToolTip": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker\\MonsterFinder.cs",
-              "RelativeToolTip": "LU4_Walker\\MonsterFinder.cs",
-              "ViewState": "AgIAAEIAAAAAAAAAAAAAAGAAAAAtAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-25T16:27:57.656Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "PixelColorInspector.cs",
-              "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker\\PixelColorInspector.cs",
-              "RelativeDocumentMoniker": "LU4_Walker\\PixelColorInspector.cs",
-              "ToolTip": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker\\PixelColorInspector.cs",
-              "RelativeToolTip": "LU4_Walker\\PixelColorInspector.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAsAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-25T16:07:51.625Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "ScreenshotMaker.cs",
-              "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker\\ScreenshotMaker.cs",
-              "RelativeDocumentMoniker": "LU4_Walker\\ScreenshotMaker.cs",
-              "ToolTip": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker\\ScreenshotMaker.cs",
-              "RelativeToolTip": "LU4_Walker\\ScreenshotMaker.cs",
-              "ViewState": "AgIAAFgAAAAAAAAAAAAQwIkAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-25T16:06:53.89Z",
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\wtopm\\source\\repos\\LU4_Walker\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "MainWindow.xaml",
+              "ToolTip": "C:\\Users\\wtopm\\source\\repos\\LU4_Walker\\MainWindow.xaml",
+              "RelativeToolTip": "MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2025-07-10T05:42:17.39Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "RedPixelChecker.cs",
-              "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker\\RedPixelChecker.cs",
-              "RelativeDocumentMoniker": "LU4_Walker\\RedPixelChecker.cs",
-              "ToolTip": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker\\RedPixelChecker.cs",
-              "RelativeToolTip": "LU4_Walker\\RedPixelChecker.cs",
-              "ViewState": "AgIAAEAAAAAAAAAAAAAQwHEAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-25T15:59:19.032Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "PixelColorChecker.cs",
-              "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker\\PixelColorChecker.cs",
-              "RelativeDocumentMoniker": "LU4_Walker\\PixelColorChecker.cs",
-              "ToolTip": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker\\PixelColorChecker.cs",
-              "RelativeToolTip": "LU4_Walker\\PixelColorChecker.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAApAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-24T17:03:50.145Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "MainWindow.xaml",
-              "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker\\MainWindow.xaml",
-              "RelativeDocumentMoniker": "LU4_Walker\\MainWindow.xaml",
-              "ToolTip": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker\\MainWindow.xaml",
-              "RelativeToolTip": "LU4_Walker\\MainWindow.xaml",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2025-06-23T09:20:22.478Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
               "Title": "MainWindow.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker\\MainWindow.xaml.cs",
-              "RelativeDocumentMoniker": "LU4_Walker\\MainWindow.xaml.cs",
-              "ToolTip": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker\\MainWindow.xaml.cs",
-              "RelativeToolTip": "LU4_Walker\\MainWindow.xaml.cs",
-              "ViewState": "AgIAAM4AAAAAAAAAAAAUwN0AAAANAAAAAAAAAA==",
+              "DocumentMoniker": "C:\\Users\\wtopm\\source\\repos\\LU4_Walker\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "MainWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\wtopm\\source\\repos\\LU4_Walker\\MainWindow.xaml.cs",
+              "RelativeToolTip": "MainWindow.xaml.cs",
+              "ViewState": "AgIAAMsAAAAAAAAAAAAAAAcBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-23T09:20:22.014Z",
+              "WhenOpened": "2025-07-10T05:42:15.3Z",
               "EditorCaption": ""
             }
           ]

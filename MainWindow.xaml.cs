@@ -152,28 +152,46 @@ namespace LU4_Walker
         // Получить значение R-канала пикселя
         private void btnGetR_Click(object sender, RoutedEventArgs e)
         {
-            IntPtr hwnd = GetEffectiveHwnd();
-            if (hwnd == IntPtr.Zero) { MessageBox.Show("Окно игры не выбрано."); return; }
-
             if (!int.TryParse(tbX.Text, out int x) ||
                 !int.TryParse(tbY.Text, out int y))
             {
-                MessageBox.Show("Введите корректные X и Y."); return;
+                MessageBox.Show("Введите корректные целые значения X и Y.");
+                return;
             }
 
-            var tl = new POINT { X = 0, Y = 0 };
-            GetClientRect(hwnd, out _);
-            ClientToScreen(hwnd, ref tl);
-            int screenX = tl.X + x;
-            int screenY = tl.Y + y;
+            // Ищем последний .bmp файл в текущей папке
+            var folder = AppDomain.CurrentDomain.BaseDirectory;
+            var latestFile = new DirectoryInfo(folder)
+                .GetFiles("*.bmp")
+                .OrderByDescending(f => f.LastWriteTime)
+                .FirstOrDefault();
 
-            IntPtr hdc = GetDC(hwnd);
-            uint color = GetPixel(hdc, screenX, screenY);
-            ReleaseDC(hwnd, hdc);
-            int R = (int)((color >> 16) & 0xFF);
+            if (latestFile == null)
+            {
+                MessageBox.Show("Файл BMP не найден.");
+                return;
+            }
 
-            lblR.Text = R.ToString();
+            try
+            {
+                using var bmp = new Bitmap(latestFile.FullName);
+
+                // Проверка на выход за границы изображения
+                if (x < 0 || y < 0 || x >= bmp.Width || y >= bmp.Height)
+                {
+                    MessageBox.Show("Координаты вне диапазона изображения.");
+                    return;
+                }
+
+                var pixelColor = bmp.GetPixel(x, y);
+                lblR.Text = pixelColor.R.ToString();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка при чтении BMP:\n" + ex.Message);
+            }
         }
+
 
         // OCR-скан и наведение курсора: центр + 5 пикселей вниз
         private void RunOcrAndAim(IntPtr hWnd)

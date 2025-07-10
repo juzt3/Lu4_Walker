@@ -55,6 +55,10 @@
               "target": "Package",
               "version": "[9.0.7, )"
             },
+            "System.IO.Ports": {
+              "target": "Package",
+              "version": "[9.0.7, )"
+            },
             "Tesseract": {
               "target": "Package",
               "version": "[5.2.0, )"

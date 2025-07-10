@@ -46,13 +46,38 @@ namespace LU4_Walker
             keyTimer.Interval = TimeSpan.FromSeconds(5);
             keyTimer.Tick += (_, __) =>
             {
-                if (targetHwnd != IntPtr.Zero)
+                if (targetHwnd != IntPtr.Zero && IsTargetVisible(targetHwnd))
                 {
                     PostMessage(targetHwnd, WM_KEYDOWN, new IntPtr(VK_1), IntPtr.Zero);
                     PostMessage(targetHwnd, WM_KEYUP, new IntPtr(VK_1), IntPtr.Zero);
                 }
             };
+
         }
+
+        // метод — обнаружение цели по красному пикселю
+        private bool IsTargetVisible(IntPtr hwnd)
+        {
+            if (!GetClientRect(hwnd, out RECT rect)) return false;
+            var tl = new POINT { X = 0, Y = 0 };
+            if (!ClientToScreen(hwnd, ref tl)) return false;
+
+            int width = rect.Right - rect.Left;
+
+            using var bmp = new Bitmap(width, 1);
+            using var g = Graphics.FromImage(bmp);
+            g.CopyFromScreen(tl.X, tl.Y, 0, 0, bmp.Size);
+
+            for (int x = 0; x < width; x++)
+            {
+                var color = bmp.GetPixel(x, 0);
+                if (color.R >= 240 && color.G < 30 && color.B < 30)
+                    return true;
+            }
+
+            return false;
+        }
+
 
         private void cbWindows_DropDownOpened(object sender, EventArgs e)
         {

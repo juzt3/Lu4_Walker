@@ -12,6 +12,10 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Tesseract;
+using System.Windows.Interop;
+using System.Windows.Forms;
+
+
 
 namespace LU4_Walker
 {
@@ -24,6 +28,27 @@ namespace LU4_Walker
         [DllImport("user32.dll")] static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
         private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
         private const uint MOUSEEVENTF_LEFTUP = 0x0004;
+
+        private const int WH_KEYBOARD_LL = 13;
+        private const int WM_KEYDOWN = 0x0100;
+
+        private IntPtr hookId = IntPtr.Zero;
+
+        private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+        private LowLevelKeyboardProc proc;
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
+
+        [DllImport("user32.dll")]
+        private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GetModuleHandle(string lpModuleName);
+
 
         [StructLayout(LayoutKind.Sequential)] struct POINT { public int X, Y; }
         [StructLayout(LayoutKind.Sequential)] struct RECT { public int Left, Top, Right, Bottom; }
@@ -41,7 +66,7 @@ namespace LU4_Walker
         public MainWindow()
         {
             InitializeComponent();
-
+            proc = HookCallback;
             // Проверкa наличия COM4
             var ports = SerialPort.GetPortNames();
             if (!ports.Contains("COM4"))
@@ -54,6 +79,8 @@ namespace LU4_Walker
                 Application.Current.Shutdown();
                 return;
             }
+
+            
 
             // Инициализация и открытие Teensy
             try
@@ -103,6 +130,9 @@ namespace LU4_Walker
         {
             if (teensy.IsOpen) teensy.Close();
             Application.Current.Shutdown();
+            if (hookId != IntPtr.Zero)
+                UnhookWindowsHookEx(hookId);
+
         }
 
         private void cbWindows_DropDownOpened(object sender, EventArgs e)
@@ -296,6 +326,9 @@ namespace LU4_Walker
             int w = rect.Right - rect.Left;
             int h = rect.Bottom - rect.Top;
 
+            int screenCenterX = tl.X + w / 2;
+            int screenCenterY = tl.Y + h / 2;
+
             using var bmp = new Bitmap(w, h);
             using var g = Graphics.FromImage(bmp);
             g.CopyFromScreen(tl.X, tl.Y, 0, 0, bmp.Size);
@@ -310,35 +343,88 @@ namespace LU4_Walker
             using var iter = page.GetIterator();
             iter.Begin();
 
-            var candidates = new List<(int X, int Y)>();
+            var targets = new List<(int X, int Y)>();
             do
             {
                 var word = iter.GetText(PageIteratorLevel.Word);
                 if (string.IsNullOrWhiteSpace(word)) continue;
                 if (!iter.TryGetBoundingBox(PageIteratorLevel.Word, out var box)) continue;
 
-                // Центр слова
                 int cx = box.X1 + box.Width / 2;
                 int cy = box.Y1 + box.Height / 2;
 
-                // Абсолютные экранные координаты
                 int screenX = tl.X + cx;
                 int screenY = tl.Y + cy;
 
                 if (!IsExcludedZone(screenX, screenY))
-                    candidates.Add((screenX, screenY));
+                    targets.Add((screenX, screenY));
             }
             while (iter.Next(PageIteratorLevel.Word));
 
-            if (candidates.Count == 0) return;
+            if (targets.Count == 0) return;
 
-            var rnd = new Random();
-            var (tx, ty) = candidates[rnd.Next(candidates.Count)];
+            var sorted = targets
+                .OrderBy(p => Math.Sqrt(Math.Pow(p.X - screenCenterX, 2) + Math.Pow(p.Y - screenCenterY, 2)))
+                .ToList();
+            var (tx, ty) = sorted[0];
+            ClickTargetTwice(tx, ty);
 
-            SetCursorPos(tx, ty);
-            Thread.Sleep(500);
-            mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, UIntPtr.Zero);
-            mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, UIntPtr.Zero);
+        }
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            proc = HookCallback;
+            using var curProcess = Process.GetCurrentProcess();
+            using var curModule = curProcess.MainModule!;
+            hookId = SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
+        }
+        private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            const int WM_KEYDOWN = 0x0100;
+
+            if (nCode >= 0 && wParam == (IntPtr)WM_KEYDOWN)
+            {
+                int vkCode = Marshal.ReadInt32(lParam);
+
+                if (vkCode == KeyInterop.VirtualKeyFromKey(Key.PageUp))
+                    Dispatcher.Invoke(() => btnStart_Click(btnStart, new RoutedEventArgs()));
+
+                else if (vkCode == KeyInterop.VirtualKeyFromKey(Key.PageDown))
+                    Dispatcher.Invoke(() => btnStop_Click(btnStop, new RoutedEventArgs()));
+            }
+
+            return CallNextHookEx(hookId, nCode, wParam, lParam);
+        }
+
+
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.PageUp)
+            {
+                btnStart_Click(btnStart, new RoutedEventArgs());
+            }
+            else if (e.Key == Key.PageDown)
+            {
+                btnStop_Click(btnStop, new RoutedEventArgs());
+            }
+        }
+
+        private void ClickTargetTwice(int x, int y)
+        {
+            var clicks = new List<(int dx, int dy)>
+    {
+        (0, 10),    // ниже
+        (-10, 0)    // влево
+    };
+
+            foreach (var (dx, dy) in clicks)
+            {
+                SetCursorPos(x + dx, y + dy);
+                Thread.Sleep(300);
+                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, UIntPtr.Zero);
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, UIntPtr.Zero);
+                Thread.Sleep(100);
+            }
         }
 
         // Вспомогательный: конвертация Bitmap в байты для Tesseract

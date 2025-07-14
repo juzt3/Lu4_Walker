@@ -29,7 +29,8 @@
               "ToolTip": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\MainWindow.xaml",
               "RelativeToolTip": "MainWindow.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2025-07-10T05:42:17.39Z"
+              "WhenOpened": "2025-07-10T05:42:17.39Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -37,9 +38,9 @@
               "Title": "MainWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\MainWindow.xaml.cs",
               "RelativeDocumentMoniker": "MainWindow.xaml.cs",
-              "ToolTip": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\MainWindow.xaml.cs*",
-              "RelativeToolTip": "MainWindow.xaml.cs*",
-              "ViewState": "AgIAAL0BAAAAAAAAAAA0wOQBAAAJAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\MainWindow.xaml.cs",
+              "RelativeToolTip": "MainWindow.xaml.cs",
+              "ViewState": "AgIAAD4BAAAAAAAAAAAQwE4BAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-10T05:42:15.3Z",
               "EditorCaption": ""

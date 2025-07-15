@@ -26,17 +26,20 @@ namespace LU4_Walker
             int width = rect.Right - rect.Left;
             int height = rect.Bottom - rect.Top;
 
-            using var bmp = new Bitmap(width, height, PixelFormat.Format24bppRgb);
+            // 🔺 Верхняя 2.5% зона
+            int maxY = Math.Max(1, (int)(height * 0.025));
+
+            using var bmp = new Bitmap(width, maxY, PixelFormat.Format24bppRgb);
             using (Graphics g = Graphics.FromImage(bmp))
             {
                 g.CopyFromScreen(topLeft.x, topLeft.y, 0, 0,
-                                 new Size(width, height),
+                                 new Size(width, maxY),
                                  CopyPixelOperation.SourceCopy);
             }
 
             for (int x = 1; x < width; x++)
             {
-                for (int y = 0; y < height; y++)
+                for (int y = 0; y < maxY; y++)
                 {
                     var c = bmp.GetPixel(x, y);
                     if (c.R == 255 && c.G == 0 && c.B == 0)
@@ -46,5 +49,6 @@ namespace LU4_Walker
 
             return false;
         }
+
     }
 }

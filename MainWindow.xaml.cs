@@ -36,6 +36,7 @@ namespace LU4_Walker
 
         private readonly DispatcherTimer attackTimer = new();
         private readonly DispatcherTimer searchTimer = new();
+        private readonly DispatcherTimer targetSelectedTimer = new();
         private readonly LowLevelKeyboardProc hookProc;
         private readonly SerialPort teensy;
         private IntPtr hookId = IntPtr.Zero;
@@ -52,10 +53,12 @@ namespace LU4_Walker
                 MessageBox.Show($"Не удалось открыть COM3:\n{ex.Message}", "COM-порт", MessageBoxButton.OK);
             }
 
-            attackTimer.Interval = TimeSpan.FromSeconds(1);
-            searchTimer.Interval = TimeSpan.FromSeconds(2);
+            attackTimer.Interval = TimeSpan.FromMilliseconds(600);
+            searchTimer.Interval = TimeSpan.FromMilliseconds(1000);
+            targetSelectedTimer.Interval = TimeSpan.FromMilliseconds(800);
             attackTimer.Tick += AttackTimer_Tick;
             searchTimer.Tick += SearchTimer_Tick;
+            targetSelectedTimer.Tick += TargetSelectedTimer_Tick;
 
             hookProc = HookCallback;
             Loaded += (_, __) =>
@@ -77,14 +80,15 @@ namespace LU4_Walker
             if (targetHwnd == IntPtr.Zero) return;
 
             bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
+            bool chosen = await Task.Run(() => Target_Chosen.IsSelected(targetHwnd));
 
-            if (!targetVisible)
+            if (!targetVisible && !chosen)
             {
                 // 🔍 Цель не найдена — ищем
                 await Task.Run(() =>
                 {
                     teensy.Write("J");
-                    System.Threading.Thread.Sleep(80);
+                    System.Threading.Thread.Sleep(100);
                 });
             }
         }
@@ -97,16 +101,36 @@ namespace LU4_Walker
 
             bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
 
+
             if (targetVisible)
-            {
+           {
                 // 🎯 Цель найдена — атакуем
                 await Task.Run(() =>
                 {
                     teensy.Write("1");
-                    System.Threading.Thread.Sleep(80);
+                    System.Threading.Thread.Sleep(100);
                 });
             }
         }
+
+        private async void TargetSelectedTimer_Tick(object? sender, EventArgs e)
+        {
+            if (targetHwnd == IntPtr.Zero) return;
+
+            bool chosen = await Task.Run(() => Target_Chosen.IsSelected(targetHwnd));
+            bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
+
+            if (chosen && !targetVisible)
+            {
+                teensy.Write("L");                         // Зажим клавиши L (F12)
+                await Task.Delay(2000);                    // Держим 2 секунды
+                teensy.Write("X");                         // Нажимаем клавишу X (Escape)
+                System.Threading.Thread.Sleep(100);                     // Короткая пауза
+            }
+        }
+
+
+
 
 
         // 🧠 Глобальный хук клавиш
@@ -134,6 +158,7 @@ namespace LU4_Walker
 
             attackTimer.Start();
             searchTimer.Start();
+            targetSelectedTimer.Start();
             btnStart.IsEnabled = false;
             btnStop.IsEnabled = true;
         }
@@ -142,6 +167,7 @@ namespace LU4_Walker
         {
             attackTimer.Stop();
             searchTimer.Stop();
+            targetSelectedTimer.Stop();
             btnStart.IsEnabled = true;
             btnStop.IsEnabled = false;
         }

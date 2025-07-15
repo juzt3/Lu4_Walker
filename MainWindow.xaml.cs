@@ -74,22 +74,40 @@ namespace LU4_Walker
         // 🎯 Поиск цели (J = F10)
         private async void SearchTimer_Tick(object? sender, EventArgs e)
         {
-            await Task.Run(() =>
+            if (targetHwnd == IntPtr.Zero) return;
+
+            bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
+
+            if (!targetVisible)
             {
-                teensy.Write("J");
-                System.Threading.Thread.Sleep(80);
-            });
+                // 🔍 Цель не найдена — ищем
+                await Task.Run(() =>
+                {
+                    teensy.Write("J");
+                    System.Threading.Thread.Sleep(80);
+                });
+            }
         }
+
 
         // 🗡️ Атака (1)
         private async void AttackTimer_Tick(object? sender, EventArgs e)
         {
-            await Task.Run(() =>
+            if (targetHwnd == IntPtr.Zero) return;
+
+            bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
+
+            if (targetVisible)
             {
-                teensy.Write("1");
-                System.Threading.Thread.Sleep(80);
-            });
+                // 🎯 Цель найдена — атакуем
+                await Task.Run(() =>
+                {
+                    teensy.Write("1");
+                    System.Threading.Thread.Sleep(80);
+                });
+            }
         }
+
 
         // 🧠 Глобальный хук клавиш
         private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)

@@ -9,6 +9,10 @@
     {
       "AbsoluteMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|c:\\users\\wtopm\\documents\\github\\lu4_walker\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
       "RelativeMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|solutionrelative:mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|c:\\users\\wtopm\\documents\\github\\lu4_walker\\hp_target_monster.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|solutionrelative:hp_target_monster.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,8 +22,21 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 2,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "HP_Target_Monster.cs",
+              "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\HP_Target_Monster.cs",
+              "RelativeDocumentMoniker": "HP_Target_Monster.cs",
+              "ToolTip": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\HP_Target_Monster.cs",
+              "RelativeToolTip": "HP_Target_Monster.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-15T10:14:33.712Z",
+              "EditorCaption": ""
+            },
             {
               "$type": "Document",
               "DocumentIndex": 1,
@@ -40,7 +57,7 @@
               "RelativeDocumentMoniker": "MainWindow.xaml.cs",
               "ToolTip": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\MainWindow.xaml.cs",
               "RelativeToolTip": "MainWindow.xaml.cs",
-              "ViewState": "AgIAANIAAAAAAAAAAAAiwOcAAAAnAAAAAAAAAA==",
+              "ViewState": "AgIAAD8AAAAAAAAAAAAcwEcAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-10T05:42:15.3Z",
               "EditorCaption": ""

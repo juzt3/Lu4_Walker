@@ -1,6 +1,4 @@
-﻿// MainWindow.xaml.cs
-
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -9,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Tesseract;
@@ -29,14 +28,14 @@ namespace LU4_Walker
         [StructLayout(LayoutKind.Sequential)] struct POINT { public int X, Y; }
         [StructLayout(LayoutKind.Sequential)] struct RECT { public int Left, Top, Right, Bottom; }
 
-        private const int WH_KEYBOARD_LL = 13;
-        private const int WM_KEYDOWN = 0x0100;
-        private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+        const int WH_KEYBOARD_LL = 13;
+        const int WM_KEYDOWN = 0x0100;
+        delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
         #endregion
 
-        private readonly DispatcherTimer attackTimer = new DispatcherTimer();
-        private readonly DispatcherTimer searchTimer = new DispatcherTimer();
+        private readonly DispatcherTimer attackTimer = new();
+        private readonly DispatcherTimer searchTimer = new();
         private readonly LowLevelKeyboardProc hookProc;
         private readonly SerialPort teensy;
         private IntPtr hookId = IntPtr.Zero;
@@ -72,45 +71,56 @@ namespace LU4_Walker
             base.OnClosed(e);
         }
 
-        // ── Обработчики XAML ──
-
-        private void btnClose_Click(object sender, RoutedEventArgs e)
+        // 🎯 Поиск цели (J = F10)
+        private async void SearchTimer_Tick(object? sender, EventArgs e)
         {
-            Application.Current.Shutdown();
-        }
-
-        private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            DragMove();
-        }
-
-        private void cbWindows_DropDownOpened(object sender, EventArgs e)
-        {
-            cbWindows.Items.Clear();
-            foreach (var p in Process.GetProcesses()
-                                      .Where(p => p.MainWindowHandle != IntPtr.Zero
-                                               && p.ProcessName.Contains("lu4", StringComparison.OrdinalIgnoreCase)))
+            await Task.Run(() =>
             {
-                cbWindows.Items.Add(new WindowItem(p.MainWindowHandle, p.MainWindowTitle));
+                teensy.Write("J");
+                System.Threading.Thread.Sleep(80);
+            });
+        }
+
+        // 🗡️ Атака (1)
+        private async void AttackTimer_Tick(object? sender, EventArgs e)
+        {
+            await Task.Run(() =>
+            {
+                teensy.Write("1");
+                System.Threading.Thread.Sleep(80);
+            });
+        }
+
+        // 🧠 Глобальный хук клавиш
+        private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            if (nCode >= 0 && wParam == (IntPtr)WM_KEYDOWN)
+            {
+                int vk = Marshal.ReadInt32(lParam);
+                if (vk == KeyInterop.VirtualKeyFromKey(Key.PageUp))
+                    Dispatcher.Invoke(StartTimers);
+                else if (vk == KeyInterop.VirtualKeyFromKey(Key.PageDown))
+                    Dispatcher.Invoke(StopTimers);
             }
+            return CallNextHookEx(hookId, nCode, wParam, lParam);
         }
 
-        private void btnStart_Click(object sender, RoutedEventArgs e)
+        // ⏯️ Старт / Стоп
+        private void StartTimers()
         {
-            if (cbWindows.SelectedItem is not WindowItem wi)
+            if (targetHwnd == IntPtr.Zero)
             {
-                MessageBox.Show("Выберите окно LU4", "Ошибка", MessageBoxButton.OK);
+                MessageBox.Show("Выберите окно LU4", "Ошибка");
                 return;
             }
 
-            targetHwnd = wi.Hwnd;
             attackTimer.Start();
             searchTimer.Start();
             btnStart.IsEnabled = false;
             btnStop.IsEnabled = true;
         }
 
-        private void btnStop_Click(object sender, RoutedEventArgs e)
+        private void StopTimers()
         {
             attackTimer.Stop();
             searchTimer.Stop();
@@ -118,43 +128,7 @@ namespace LU4_Walker
             btnStop.IsEnabled = false;
         }
 
-        // ── Горячие клавиши ──
-
-        private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
-        {
-            if (nCode >= 0 && wParam == (IntPtr)WM_KEYDOWN)
-            {
-                int vk = Marshal.ReadInt32(lParam);
-                if (vk == KeyInterop.VirtualKeyFromKey(Key.PageUp))
-                    Dispatcher.Invoke(() => btnStart_Click(null!, null!));
-                else if (vk == KeyInterop.VirtualKeyFromKey(Key.PageDown))
-                    Dispatcher.Invoke(() => btnStop_Click(null!, null!));
-            }
-            return CallNextHookEx(hookId, nCode, wParam, lParam);
-        }
-
-        // ── Таймеры: работа через Teensy ──
-
-        private async void AttackTimer_Tick(object? sender, EventArgs e)
-        {
-            await Task.Run(() =>
-            {
-                teensy.Write("1");       // жмёт клавишу '1'
-                System.Threading.Thread.Sleep(80);
-            });
-        }
-
-        private async void SearchTimer_Tick(object? sender, EventArgs e)
-        {
-            await Task.Run(() =>
-            {
-                teensy.Write("J");       // жмёт F10
-                System.Threading.Thread.Sleep(80);
-            });
-        }
-
-        // ── Скриншот по HWND ──
-
+        // 📸 Скриншот по HWND
         private void btnScreenshot_Click(object sender, RoutedEventArgs e)
         {
             if (targetHwnd == IntPtr.Zero)
@@ -164,23 +138,22 @@ namespace LU4_Walker
             }
 
             GetClientRect(targetHwnd, out var rc);
-            var org = new POINT();
-            ClientToScreen(targetHwnd, ref org);
+            var origin = new POINT();
+            ClientToScreen(targetHwnd, ref origin);
 
             int w = rc.Right - rc.Left;
             int h = rc.Bottom - rc.Top;
 
             using var bmp = new Bitmap(w, h);
             using var g = Graphics.FromImage(bmp);
-            g.CopyFromScreen(org.X, org.Y, 0, 0, bmp.Size);
+            g.CopyFromScreen(origin.X, origin.Y, 0, 0, bmp.Size);
 
             string file = $"{DateTime.Now:yyyy-MM-dd - HH-mm-ss}.bmp";
             bmp.Save(file);
-            MessageBox.Show($"Скриншот сохранён:\n{file}", "Готово");
+            MessageBox.Show($"Скриншот сохранён:\n{file}");
         }
 
-        // ── OCR скрин по HWND ──
-
+        // 🔍 OCR скрин по HWND
         private void btnOcrScreenshot_Click(object sender, RoutedEventArgs e)
         {
             if (targetHwnd == IntPtr.Zero)
@@ -190,15 +163,15 @@ namespace LU4_Walker
             }
 
             GetClientRect(targetHwnd, out var rc);
-            var org = new POINT();
-            ClientToScreen(targetHwnd, ref org);
+            var origin = new POINT();
+            ClientToScreen(targetHwnd, ref origin);
 
             int w = rc.Right - rc.Left;
             int h = rc.Bottom - rc.Top;
 
             using var bmp = new Bitmap(w, h);
             using var g = Graphics.FromImage(bmp);
-            g.CopyFromScreen(org.X, org.Y, 0, 0, bmp.Size);
+            g.CopyFromScreen(origin.X, origin.Y, 0, 0, bmp.Size);
 
             using var engine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default);
             using var ms = new MemoryStream();
@@ -220,11 +193,40 @@ namespace LU4_Walker
 
             string file = $"{DateTime.Now:yyyy-MM-dd - HH-mm-ss} - OCR.bmp";
             bmp.Save(file);
-            MessageBox.Show($"OCR-скрин сохранён:\n{file}", "Готово");
+            MessageBox.Show($"OCR-скрин сохранён:\n{file}");
         }
 
-        // ── Обёртка для ComboBox ──
+        // 🪟 Комбо-бокс выбора окна
+        private void cbWindows_DropDownOpened(object sender, EventArgs e)
+        {
+            cbWindows.Items.Clear();
+            foreach (var p in Process.GetProcesses()
+                                      .Where(p => p.MainWindowHandle != IntPtr.Zero
+                                               && p.ProcessName.Contains("lu4", StringComparison.OrdinalIgnoreCase)))
+            {
+                cbWindows.Items.Add(new WindowItem(p.MainWindowHandle, p.MainWindowTitle));
+            }
+        }
 
+        private void cbWindows_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (cbWindows.SelectedItem is WindowItem wi)
+                targetHwnd = wi.Hwnd;
+        }
+
+        // ❌ Закрытие
+        private void btnClose_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+
+        // 🖱️ Перетаскивание окна
+        private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            DragMove();
+        }
+
+        // 🎁 Класс для ComboBox
         private class WindowItem
         {
             public IntPtr Hwnd { get; }
@@ -232,5 +234,15 @@ namespace LU4_Walker
             public WindowItem(IntPtr hwnd, string title) => (Hwnd, Title) = (hwnd, title);
             public override string ToString() => Title;
         }
+        private void btnStart_Click(object sender, RoutedEventArgs e)
+        {
+            StartTimers();
+        }
+
+        private void btnStop_Click(object sender, RoutedEventArgs e)
+        {
+            StopTimers();
+        }
+
     }
 }

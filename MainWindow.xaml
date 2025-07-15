@@ -2,104 +2,93 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="LU4 Walker"
-        Height="340"
-        Width="380"
+        Width="400"
+        Height="220"
         WindowStyle="None"
         Topmost="True"
         ResizeMode="NoResize"
         Background="#2C2C2C"
-        Focusable="True"
         MouseLeftButtonDown="Window_MouseLeftButtonDown">
 
     <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="5" Background="#2C2C2C">
         <Grid Margin="10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <!-- Заголовок -->
                 <RowDefinition Height="Auto"/>
-                <!-- Выбор окна -->
                 <RowDefinition Height="Auto"/>
-                <!-- Управление -->
                 <RowDefinition Height="Auto"/>
-                <!-- Проверка R -->
                 <RowDefinition Height="Auto"/>
-                <!-- Подсказка -->
             </Grid.RowDefinitions>
 
-            <!-- Заголовок + Закрытие -->
+            <!-- Заголовок -->
             <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,10">
                 <TextBlock Text="LU4 Walker"
                            FontWeight="Bold"
+                           FontSize="16"
                            Foreground="White"
                            VerticalAlignment="Center"/>
                 <Button Content="X"
                         Width="30"
                         Height="25"
-                        Background="Red"
+                        Background="DarkRed"
                         Foreground="White"
+                        FontWeight="Bold"
                         DockPanel.Dock="Right"
                         Click="btnClose_Click"/>
             </DockPanel>
 
-            <!-- Выбор окна -->
+            <!-- ComboBox -->
             <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,0,0,10">
                 <Label Content="Окно:" Width="60" Foreground="White"/>
                 <ComboBox x:Name="cbWindows"
-                          Width="240"
+                          Width="280"
                           DropDownOpened="cbWindows_DropDownOpened"/>
             </StackPanel>
 
-            <!-- Кнопки управления -->
+            <!-- Старт / Стоп -->
             <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" Margin="0,0,0,10">
                 <Button x:Name="btnStart"
                         Content="Старт"
-                        Width="90"
+                        FontWeight="Bold"
+                        Background="Green"
+                        Foreground="White"
+                        Width="100"
                         Margin="5"
                         Click="btnStart_Click"/>
                 <Button x:Name="btnStop"
                         Content="Стоп"
-                        Width="90"
+                        FontWeight="Bold"
+                        Background="Red"
+                        Foreground="White"
+                        Width="100"
                         Margin="5"
                         Click="btnStop_Click"
                         IsEnabled="False"/>
-                <Button x:Name="btnScreenshot"
-                        Content="📸"
-                        Width="40"
-                        Click="btnScreenshot_Click"/>
-                <Button x:Name="btnOcrScreenshot"
-                        Content="🔍"
-                        Width="40"
-                        Click="btnOcrScreenshot_Click"/>
             </StackPanel>
 
-            <!-- Проверка R-пикселя -->
-            <StackPanel Orientation="Horizontal" Grid.Row="3" HorizontalAlignment="Center">
-                <Label Content="X:" Foreground="White" VerticalAlignment="Center"/>
-                <TextBox x:Name="tbX" Width="40" Margin="5,0"/>
-                <Label Content="Y:" Foreground="White" VerticalAlignment="Center"/>
-                <TextBox x:Name="tbY" Width="40" Margin="5,0"/>
-                <Button x:Name="btnGetR"
-                        Content="R?"
-                        Width="50"
-                        Margin="5,0"
-                        Click="btnGetR_Click"/>
-                <Label Content="→" Foreground="White" VerticalAlignment="Center" Margin="5,0"/>
-                <TextBlock x:Name="lblR"
-                           Width="30"
-                           Foreground="LightGreen"
-                           FontWeight="Bold"
-                           Text="—"
-                           VerticalAlignment="Center"/>
+            <!-- Скриншоты -->
+            <StackPanel Orientation="Horizontal" Grid.Row="3" HorizontalAlignment="Center" Margin="0,0,0,10">
+                <Button x:Name="btnScreenshot"
+                        Content="📸"
+                        ToolTip="Скриншот по выбранному окну"
+                        Width="60"
+                        Click="btnScreenshot_Click"
+                        Margin="5"/>
+                <Button x:Name="btnOcrScreenshot"
+                        Content="🔍"
+                        ToolTip="OCR по выбранному окну"
+                        Width="60"
+                        Click="btnOcrScreenshot_Click"
+                        Margin="5"/>
             </StackPanel>
 
             <!-- Подсказка -->
             <TextBlock Grid.Row="4"
-                       Text="OCR сканирует каждую секунду. Атака — при красном HP-пикселе."
+                       Text="PageUp / PageDown — запуск и остановка. Все действия по HWND LU4."
                        Foreground="LightGray"
                        FontStyle="Italic"
                        FontSize="12"
-                       HorizontalAlignment="Center"
-                       Margin="0,5,0,0"/>
+                       HorizontalAlignment="Center"/>
         </Grid>
     </Border>
 </Window>

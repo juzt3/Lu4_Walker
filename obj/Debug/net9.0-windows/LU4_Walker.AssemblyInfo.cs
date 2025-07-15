@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LU4_Walker")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3ebb960bbbbfa9683f06e1c4fe3b5faa7ccbdf5d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a71be827eaac97384bc09c6f64a84ce175e3e6db")]
 [assembly: System.Reflection.AssemblyProductAttribute("LU4_Walker")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LU4_Walker")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

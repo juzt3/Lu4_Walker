@@ -24,6 +24,8 @@ namespace LU4_Walker
         [DllImport("user32.dll")] static extern bool UnhookWindowsHookEx(IntPtr hhk);
         [DllImport("user32.dll")] static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
         [DllImport("kernel32.dll")] static extern IntPtr GetModuleHandle(string lpModuleName);
+        [DllImport("user32.dll")] private static extern bool SetCursorPos(int X, int Y);
+
 
         [StructLayout(LayoutKind.Sequential)] struct POINT { public int X, Y; }
         [StructLayout(LayoutKind.Sequential)] struct RECT { public int Left, Top, Right, Bottom; }
@@ -37,6 +39,8 @@ namespace LU4_Walker
         private readonly DispatcherTimer attackTimer = new();
         private readonly DispatcherTimer searchTimer = new();
         private readonly DispatcherTimer pickUpTimer = new();
+        private readonly DispatcherTimer findHelper = new();
+
         private readonly LowLevelKeyboardProc hookProc;
         private readonly SerialPort teensy;
         private IntPtr hookId = IntPtr.Zero;
@@ -56,9 +60,11 @@ namespace LU4_Walker
             attackTimer.Interval = TimeSpan.FromMilliseconds(800);
             searchTimer.Interval = TimeSpan.FromMilliseconds(1200);
             pickUpTimer.Interval = TimeSpan.FromMilliseconds(1000);
+            findHelper.Interval = TimeSpan.FromMilliseconds(5000);
             attackTimer.Tick += AttackTimer_Tick;
             searchTimer.Tick += SearchTimer_Tick;
             pickUpTimer.Tick += PickUpTimer_Tick;
+            findHelper.Tick += findHelper_Tick;
 
             hookProc = HookCallback;
             Loaded += (_, __) =>
@@ -129,6 +135,19 @@ namespace LU4_Walker
             }
         }
 
+        private async void findHelper_Tick(object? sender, EventArgs e)
+        {
+            if (targetHwnd == IntPtr.Zero) return;
+
+            var point = await Task.Run(() => FindNameOfMonster.FindTargetPixel(targetHwnd));
+            if (point.HasValue)
+            {
+                SetCursorPos(point.Value.X, point.Value.Y);
+            }
+        }
+
+
+
 
 
 
@@ -159,6 +178,7 @@ namespace LU4_Walker
             attackTimer.Start();
             searchTimer.Start();
             pickUpTimer.Start();
+            findHelper.Start();
             btnStart.IsEnabled = false;
             btnStop.IsEnabled = true;
         }
@@ -168,6 +188,7 @@ namespace LU4_Walker
             attackTimer.Stop();
             searchTimer.Stop();
             pickUpTimer.Stop();
+            findHelper.Stop();
             btnStart.IsEnabled = true;
             btnStop.IsEnabled = false;
         }

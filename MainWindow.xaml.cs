@@ -36,7 +36,7 @@ namespace LU4_Walker
 
         private readonly DispatcherTimer attackTimer = new();
         private readonly DispatcherTimer searchTimer = new();
-        private readonly DispatcherTimer targetSelectedTimer = new();
+        private readonly DispatcherTimer pickUpTimer = new();
         private readonly LowLevelKeyboardProc hookProc;
         private readonly SerialPort teensy;
         private IntPtr hookId = IntPtr.Zero;
@@ -53,12 +53,12 @@ namespace LU4_Walker
                 MessageBox.Show($"Не удалось открыть COM3:\n{ex.Message}", "COM-порт", MessageBoxButton.OK);
             }
 
-            attackTimer.Interval = TimeSpan.FromMilliseconds(600);
-            searchTimer.Interval = TimeSpan.FromMilliseconds(1000);
-            targetSelectedTimer.Interval = TimeSpan.FromMilliseconds(800);
+            attackTimer.Interval = TimeSpan.FromMilliseconds(800);
+            searchTimer.Interval = TimeSpan.FromMilliseconds(1200);
+            pickUpTimer.Interval = TimeSpan.FromMilliseconds(1000);
             attackTimer.Tick += AttackTimer_Tick;
             searchTimer.Tick += SearchTimer_Tick;
-            targetSelectedTimer.Tick += TargetSelectedTimer_Tick;
+            pickUpTimer.Tick += PickUpTimer_Tick;
 
             hookProc = HookCallback;
             Loaded += (_, __) =>
@@ -88,7 +88,7 @@ namespace LU4_Walker
                 await Task.Run(() =>
                 {
                     teensy.Write("J");
-                    System.Threading.Thread.Sleep(100);
+                    System.Threading.Thread.Sleep(80);
                 });
             }
         }
@@ -108,12 +108,12 @@ namespace LU4_Walker
                 await Task.Run(() =>
                 {
                     teensy.Write("1");
-                    System.Threading.Thread.Sleep(100);
+                    System.Threading.Thread.Sleep(80);
                 });
             }
         }
 
-        private async void TargetSelectedTimer_Tick(object? sender, EventArgs e)
+        private async void PickUpTimer_Tick(object? sender, EventArgs e)
         {
             if (targetHwnd == IntPtr.Zero) return;
 
@@ -123,9 +123,9 @@ namespace LU4_Walker
             if (chosen && !targetVisible)
             {
                 teensy.Write("L");                         // Зажим клавиши L (F12)
-                await Task.Delay(2000);                    // Держим 2 секунды
+                await Task.Delay(1500);                    // Держим 2 секунды
                 teensy.Write("X");                         // Нажимаем клавишу X (Escape)
-                System.Threading.Thread.Sleep(100);                     // Короткая пауза
+                
             }
         }
 
@@ -158,7 +158,7 @@ namespace LU4_Walker
 
             attackTimer.Start();
             searchTimer.Start();
-            targetSelectedTimer.Start();
+            pickUpTimer.Start();
             btnStart.IsEnabled = false;
             btnStop.IsEnabled = true;
         }
@@ -167,7 +167,7 @@ namespace LU4_Walker
         {
             attackTimer.Stop();
             searchTimer.Stop();
-            targetSelectedTimer.Stop();
+            pickUpTimer.Stop();
             btnStart.IsEnabled = true;
             btnStop.IsEnabled = false;
         }

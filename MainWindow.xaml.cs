@@ -46,6 +46,9 @@ namespace LU4_Walker
         private IntPtr hookId = IntPtr.Zero;
         private IntPtr targetHwnd = IntPtr.Zero;
 
+        private int searchTriggerCount = 0;
+
+
         public MainWindow()
         {
             InitializeComponent();
@@ -58,9 +61,9 @@ namespace LU4_Walker
             }
 
             attackTimer.Interval = TimeSpan.FromMilliseconds(800);
-            searchTimer.Interval = TimeSpan.FromMilliseconds(1200);
+            searchTimer.Interval = TimeSpan.FromMilliseconds(900);
             pickUpTimer.Interval = TimeSpan.FromMilliseconds(1000);
-            findHelper.Interval = TimeSpan.FromMilliseconds(5000);
+            findHelper.Interval = TimeSpan.FromMilliseconds(1000);
             attackTimer.Tick += AttackTimer_Tick;
             searchTimer.Tick += SearchTimer_Tick;
             pickUpTimer.Tick += PickUpTimer_Tick;
@@ -95,6 +98,7 @@ namespace LU4_Walker
                 {
                     teensy.Write("J");
                     System.Threading.Thread.Sleep(80);
+                    searchTriggerCount = Math.Min(searchTriggerCount + 1, 3); // максимум — 5
                 });
             }
         }
@@ -131,7 +135,8 @@ namespace LU4_Walker
                 teensy.Write("L");                         // Зажим клавиши L (F12)
                 await Task.Delay(1500);                    // Держим 2 секунды
                 teensy.Write("X");                         // Нажимаем клавишу X (Escape)
-                
+                searchTriggerCount = 0;
+
             }
         }
 
@@ -139,10 +144,21 @@ namespace LU4_Walker
         {
             if (targetHwnd == IntPtr.Zero) return;
 
+            if (searchTriggerCount < 3) return; // ждем 5 поисков
+
             var point = await Task.Run(() => FindNameOfMonster.FindTargetPixel(targetHwnd));
             if (point.HasValue)
             {
                 SetCursorPos(point.Value.X, point.Value.Y);
+
+                // 🖱️ Кликаем ЛКМ через Teensy
+                teensy.Write("[");  // нажать ЛКМ
+                await Task.Delay(50);
+                teensy.Write("]");  // отпустить ЛКМ
+                await Task.Delay(50);
+
+                // 🔄 Сброс счётчика после движения и клика
+                searchTriggerCount = 0;
             }
         }
 

@@ -6,6 +6,10 @@ using System.Runtime.InteropServices;
 
 namespace LU4_Walker
 {
+    // var point = await Task.Run(() => FindNameOfMonster.FindTargetPixel(targetHwnd));
+    // Находим белый пиксель в ограниченной области окна, который соответствует имени монстра.
+    //  SetCursorPos(point.Value.X, point.Value.Y);
+    //  Для координат клика используй point.Value.X и point.Value.Y
     public static class FindNameOfMonster
     {
         [DllImport("user32.dll")] private static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
@@ -33,12 +37,14 @@ namespace LU4_Walker
             int topOffset = (int)(height * 0.10);
             int bottomLimit = height - (int)(height * 0.15);
 
-            var rnd = new Random();
+            int centerX = (leftOffset + rightLimit) / 2;
+            int centerY = (topOffset + bottomLimit) / 2;
+
             var points = Enumerable.Range(leftOffset, rightLimit - leftOffset)
-                                   .SelectMany(x => Enumerable.Range(topOffset, bottomLimit - topOffset)
-                                                              .Select(y => new { x, y }))
-                                   .OrderBy(_ => rnd.Next())
-                                   .ToList();
+                .SelectMany(x => Enumerable.Range(topOffset, bottomLimit - topOffset)
+                    .Select(y => new { x, y }))
+                .OrderBy(p => Math.Sqrt(Math.Pow(p.x - centerX, 2) + Math.Pow(p.y - centerY, 2)))
+                .ToList();
 
             foreach (var pt in points)
             {

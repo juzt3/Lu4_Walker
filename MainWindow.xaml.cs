@@ -40,6 +40,7 @@ namespace LU4_Walker
         private readonly DispatcherTimer searchTimer = new();
         private readonly DispatcherTimer pickUpTimer = new();
         private readonly DispatcherTimer findHelper = new();
+        private readonly DispatcherTimer playerDead = new();
 
         private readonly LowLevelKeyboardProc hookProc;
         private readonly SerialPort teensy;
@@ -47,6 +48,9 @@ namespace LU4_Walker
         private IntPtr targetHwnd = IntPtr.Zero;
 
         private int searchTriggerCount = 0;
+
+        private SemaphoreSlim pickUpLock = new SemaphoreSlim(1, 1);
+
 
 
         public MainWindow()
@@ -62,12 +66,14 @@ namespace LU4_Walker
 
             attackTimer.Interval = TimeSpan.FromMilliseconds(800);
             searchTimer.Interval = TimeSpan.FromMilliseconds(900);
-            pickUpTimer.Interval = TimeSpan.FromMilliseconds(1000);
-            findHelper.Interval = TimeSpan.FromMilliseconds(1000);
+            pickUpTimer.Interval = TimeSpan.FromMilliseconds(1100);
+            findHelper.Interval = TimeSpan.FromMilliseconds(2000);
+            playerDead.Interval = TimeSpan.FromMilliseconds(2000);
             attackTimer.Tick += AttackTimer_Tick;
             searchTimer.Tick += SearchTimer_Tick;
             pickUpTimer.Tick += PickUpTimer_Tick;
             findHelper.Tick += findHelper_Tick;
+            playerDead.Tick += PlayerDead_Tick;
 
             hookProc = HookCallback;
             Loaded += (_, __) =>
@@ -88,38 +94,51 @@ namespace LU4_Walker
         {
             if (targetHwnd == IntPtr.Zero) return;
 
-            bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
-            bool chosen = await Task.Run(() => Target_Chosen.IsSelected(targetHwnd));
-
-            if (!targetVisible && !chosen)
+            await pickUpLock.WaitAsync(); // 🔒 ждем, если PickUp заблокировал
+            try
             {
-                // 🔍 Цель не найдена — ищем
-                await Task.Run(() =>
+                bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
+                var playerDead = await Task.Run(() => HpPlayerCheck.Scan(targetHwnd));
+
+                if (!targetVisible && !playerDead.IsReady)
                 {
-                    teensy.Write("J");
-                    System.Threading.Thread.Sleep(80);
-                    searchTriggerCount = Math.Min(searchTriggerCount + 1, 3); // максимум — 5
-                });
+                    await Task.Run(() =>
+                    {
+                        teensy.Write("J");
+                        System.Threading.Thread.Sleep(400);
+                        searchTriggerCount = Math.Min(searchTriggerCount + 1, 3);
+                    });
+                }
+            }
+            finally
+            {
+                pickUpLock.Release();
             }
         }
 
-
-        // 🗡️ Атака (1)
         private async void AttackTimer_Tick(object? sender, EventArgs e)
         {
             if (targetHwnd == IntPtr.Zero) return;
 
-            bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
+            await pickUpLock.WaitAsync();
+            try
+            {
+                bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
+                var playerDead = await Task.Run(() => HpPlayerCheck.Scan(targetHwnd));
+              
 
-
-            if (targetVisible)
-           {
-                // 🎯 Цель найдена — атакуем
-                await Task.Run(() =>
+                if (targetVisible && !playerDead.IsReady)
                 {
-                    teensy.Write("1");
-                    System.Threading.Thread.Sleep(80);
-                });
+                    await Task.Run(() =>
+                    {
+                        teensy.Write("1");
+                        System.Threading.Thread.Sleep(200);
+                    });
+                }
+            }
+            finally
+            {
+                pickUpLock.Release();
             }
         }
 
@@ -127,44 +146,82 @@ namespace LU4_Walker
         {
             if (targetHwnd == IntPtr.Zero) return;
 
-            bool chosen = await Task.Run(() => Target_Chosen.IsSelected(targetHwnd));
-            bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
-
-            if (chosen && !targetVisible)
+            await pickUpLock.WaitAsync(); // 🔒 заблокировать все остальные
+            try
             {
-                teensy.Write("L");                         // Зажим клавиши L (F12)
-                await Task.Delay(1500);                    // Держим 2 секунды
-                teensy.Write("X");                         // Нажимаем клавишу X (Escape)
-                searchTriggerCount = 0;
+                bool chosen = await Task.Run(() => Target_Chosen.IsSelected(targetHwnd));
+                bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
+                var playerDead = await Task.Run(() => HpPlayerCheck.Scan(targetHwnd));
 
+                if (chosen && !targetVisible && !playerDead.IsReady)
+                {
+                    teensy.Write("L");          
+                    await Task.Delay(1000);     
+                    teensy.Write("L");          
+                    await Task.Delay(1000);     
+                    teensy.Write("L");          
+                    await Task.Delay(1000);     
+                    searchTriggerCount = 0;
+                }
+            }
+            finally
+            {
+                pickUpLock.Release(); // ✅ отпускаем остальных
             }
         }
 
         private async void findHelper_Tick(object? sender, EventArgs e)
         {
             if (targetHwnd == IntPtr.Zero) return;
+            if (searchTriggerCount < 3) return;
 
-            if (searchTriggerCount < 3) return; // ждем 5 поисков
-
-            var point = await Task.Run(() => FindNameOfMonster.FindTargetPixel(targetHwnd));
-            if (point.HasValue)
+            await pickUpLock.WaitAsync();
+            try
             {
-                SetCursorPos(point.Value.X, point.Value.Y);
+                bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
+                bool chosen = await Task.Run(() => Target_Chosen.IsSelected(targetHwnd));
+                var point = await Task.Run(() => FindNameOfMonster.FindTargetPixel(targetHwnd));
+                var playerDead = await Task.Run(() => HpPlayerCheck.Scan(targetHwnd));
 
-                // 🖱️ Кликаем ЛКМ через Teensy
-                teensy.Write("[");  // нажать ЛКМ
-                await Task.Delay(50);
-                teensy.Write("]");  // отпустить ЛКМ
-                await Task.Delay(50);
-
-                // 🔄 Сброс счётчика после движения и клика
-                searchTriggerCount = 0;
+                if (point.HasValue && !targetVisible && !chosen && !playerDead.IsReady)
+                {
+                    SetCursorPos(point.Value.X, point.Value.Y);
+                    teensy.Write("[");
+                    await Task.Delay(400);
+                    teensy.Write("]");
+                    await Task.Delay(400);
+                    searchTriggerCount = 0;
+                }
+            }
+            finally
+            {
+                pickUpLock.Release();
             }
         }
 
+        private async void PlayerDead_Tick(object? sender, EventArgs e)
+        {
+            if (targetHwnd == IntPtr.Zero) return;
 
-
-
+            await pickUpLock.WaitAsync();
+            try
+            {
+                var playerDead = await Task.Run(() => HpPlayerCheck.Scan(targetHwnd));
+                if (playerDead.IsReady)
+                {
+                    SetCursorPos(playerDead.ClickX, playerDead.ClickY);
+                    teensy.Write("[");
+                    await Task.Delay(1000);
+                    StopTimers();
+                    await Task.Delay(1000);
+                    teensy.Write("]");
+                }
+            }
+            finally
+            {
+                pickUpLock.Release();
+            }
+        }
 
 
 
@@ -195,6 +252,7 @@ namespace LU4_Walker
             searchTimer.Start();
             pickUpTimer.Start();
             findHelper.Start();
+            playerDead.Start();
             btnStart.IsEnabled = false;
             btnStop.IsEnabled = true;
         }
@@ -205,6 +263,7 @@ namespace LU4_Walker
             searchTimer.Stop();
             pickUpTimer.Stop();
             findHelper.Stop();
+            playerDead.Stop();
             btnStart.IsEnabled = true;
             btnStop.IsEnabled = false;
         }
@@ -232,49 +291,6 @@ namespace LU4_Walker
             string file = $"{DateTime.Now:yyyy-MM-dd - HH-mm-ss}.bmp";
             bmp.Save(file);
             MessageBox.Show($"Скриншот сохранён:\n{file}");
-        }
-
-        // 🔍 OCR скрин по HWND
-        private void btnOcrScreenshot_Click(object sender, RoutedEventArgs e)
-        {
-            if (targetHwnd == IntPtr.Zero)
-            {
-                MessageBox.Show("Выберите окно LU4");
-                return;
-            }
-
-            GetClientRect(targetHwnd, out var rc);
-            var origin = new POINT();
-            ClientToScreen(targetHwnd, ref origin);
-
-            int w = rc.Right - rc.Left;
-            int h = rc.Bottom - rc.Top;
-
-            using var bmp = new Bitmap(w, h);
-            using var g = Graphics.FromImage(bmp);
-            g.CopyFromScreen(origin.X, origin.Y, 0, 0, bmp.Size);
-
-            using var engine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default);
-            using var ms = new MemoryStream();
-            bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-            ms.Position = 0;
-
-            using var pix = Pix.LoadFromMemory(ms.ToArray());
-            using var page = engine.Process(pix);
-            using var iter = page.GetIterator();
-            iter.Begin();
-
-            using var pen = new Pen(Color.LimeGreen, 2);
-            do
-            {
-                if (iter.TryGetBoundingBox(PageIteratorLevel.Word, out var box))
-                    g.DrawRectangle(pen, box.X1, box.Y1, box.Width, box.Height);
-            }
-            while (iter.Next(PageIteratorLevel.Word));
-
-            string file = $"{DateTime.Now:yyyy-MM-dd - HH-mm-ss} - OCR.bmp";
-            bmp.Save(file);
-            MessageBox.Show($"OCR-скрин сохранён:\n{file}");
         }
 
         // 🪟 Комбо-бокс выбора окна

@@ -5,6 +5,10 @@ using System.Runtime.InteropServices;
 
 namespace LU4_Walker
 {
+    //   bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
+    //   Есть ли HP монстра?
+    //
+    //
     public static class HP_Target_Monster
     {
         [DllImport("user32.dll")] private static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);

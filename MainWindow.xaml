@@ -81,12 +81,6 @@
                         Width="60"
                         Margin="5"
                         Click="btnScreenshot_Click"/>
-                <Button x:Name="btnOcrScreenshot"
-                        Content="🔍"
-                        ToolTip="OCR скрин окна LU4"
-                        Width="60"
-                        Margin="5"
-                        Click="btnOcrScreenshot_Click"/>
             </StackPanel>
 
             <!-- Подсказка -->

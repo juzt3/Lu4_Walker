@@ -5,6 +5,8 @@ using System.Runtime.InteropServices;
 
 namespace LU4_Walker
 {
+    //   bool chosen = await Task.Run(() => Target_Chosen.IsSelected(targetHwnd));
+    //   Цель выбрана? (Показывает есть ли белый пиксель в строке ХП монстра)
     public static class Target_Chosen
     {
         [DllImport("user32.dll")] private static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);

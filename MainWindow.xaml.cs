@@ -48,6 +48,7 @@ namespace LU4_Walker
         private IntPtr targetHwnd = IntPtr.Zero;
 
         private int searchTriggerCount = 0;
+        
 
         private SemaphoreSlim pickUpLock = new SemaphoreSlim(1, 1);
 
@@ -210,6 +211,7 @@ namespace LU4_Walker
                 if (playerDead.IsReady)
                 {
                     SetCursorPos(playerDead.ClickX, playerDead.ClickY);
+                    await Task.Delay(3000);
                     teensy.Write("[");
                     await Task.Delay(1000);
                     StopTimers();
@@ -251,7 +253,7 @@ namespace LU4_Walker
             attackTimer.Start();
             searchTimer.Start();
             pickUpTimer.Start();
-            findHelper.Start();
+           // findHelper.Start();
             playerDead.Start();
             btnStart.IsEnabled = false;
             btnStop.IsEnabled = true;
@@ -262,7 +264,7 @@ namespace LU4_Walker
             attackTimer.Stop();
             searchTimer.Stop();
             pickUpTimer.Stop();
-            findHelper.Stop();
+           // findHelper.Stop();
             playerDead.Stop();
             btnStart.IsEnabled = true;
             btnStop.IsEnabled = false;

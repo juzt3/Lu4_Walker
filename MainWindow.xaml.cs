@@ -47,10 +47,15 @@ namespace LU4_Walker
         private IntPtr hookId = IntPtr.Zero;
         private IntPtr targetHwnd = IntPtr.Zero;
 
-        private int searchTriggerCount = 0;
-        
+        private int searchTime = 1;
+        private bool pickUp = false;
+  
 
-        private SemaphoreSlim pickUpLock = new SemaphoreSlim(1, 1);
+
+
+
+
+
 
 
 
@@ -67,13 +72,11 @@ namespace LU4_Walker
 
             attackTimer.Interval = TimeSpan.FromMilliseconds(800);
             searchTimer.Interval = TimeSpan.FromMilliseconds(900);
-            pickUpTimer.Interval = TimeSpan.FromMilliseconds(1100);
-            findHelper.Interval = TimeSpan.FromMilliseconds(2000);
+            pickUpTimer.Interval = TimeSpan.FromMilliseconds(1000);       
             playerDead.Interval = TimeSpan.FromMilliseconds(2000);
             attackTimer.Tick += AttackTimer_Tick;
             searchTimer.Tick += SearchTimer_Tick;
-            pickUpTimer.Tick += PickUpTimer_Tick;
-            findHelper.Tick += findHelper_Tick;
+            pickUpTimer.Tick += PickUpTimer_Tick;      
             playerDead.Tick += PlayerDead_Tick;
 
             hookProc = HookCallback;
@@ -91,139 +94,96 @@ namespace LU4_Walker
         }
 
         // 🎯 Поиск цели (J = F10)
-        private async void SearchTimer_Tick(object? sender, EventArgs e)
+
+
+
+
+        private  void SearchTimer_Tick(object? sender, EventArgs e)
         {
-            if (targetHwnd == IntPtr.Zero) return;
+            if (targetHwnd == IntPtr.Zero || pickUp) return;
 
-            await pickUpLock.WaitAsync(); // 🔒 ждем, если PickUp заблокировал
-            try
+            bool targetVisible = HP_Target_Monster.Scan(targetHwnd);
+            var playerDead = HpPlayerCheck.Scan(targetHwnd);
+            bool chosen = Target_Chosen.IsSelected(targetHwnd);
+
+            if (!targetVisible && !playerDead.IsReady && !chosen)
             {
-                bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
-                var playerDead = await Task.Run(() => HpPlayerCheck.Scan(targetHwnd));
-
-                if (!targetVisible && !playerDead.IsReady)
+                string keyToSend = searchTime switch
                 {
-                    await Task.Run(() =>
-                    {
-                        teensy.Write("J");
-                        System.Threading.Thread.Sleep(400);
-                        searchTriggerCount = Math.Min(searchTriggerCount + 1, 3);
-                    });
-                }
-            }
-            finally
-            {
-                pickUpLock.Release();
+                    1 => "F",
+                    2 => "G",
+                    3 => "H",
+                    4 => "I",
+                    5 => "J",
+                    _ => "F"
+                };
+
+                teensy.Write(keyToSend);
+                 Task.Delay(200);
+                searchTime = searchTime >= 5 ? 1 : searchTime + 1;
             }
         }
 
-        private async void AttackTimer_Tick(object? sender, EventArgs e)
+
+
+
+
+        private void AttackTimer_Tick(object? sender, EventArgs e)
         {
-            if (targetHwnd == IntPtr.Zero) return;
+            if (targetHwnd == IntPtr.Zero || pickUp) return;
 
-            await pickUpLock.WaitAsync();
-            try
-            {
-                bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
-                var playerDead = await Task.Run(() => HpPlayerCheck.Scan(targetHwnd));
-              
+            bool isCasting = CastedSpell.IsCasting(targetHwnd);
+            bool targetVisible = HP_Target_Monster.Scan(targetHwnd);
+            var playerDead = HpPlayerCheck.Scan(targetHwnd);
 
-                if (targetVisible && !playerDead.IsReady)
-                {
-                    await Task.Run(() =>
-                    {
-                        teensy.Write("1");
-                        System.Threading.Thread.Sleep(200);
-                    });
-                }
-            }
-            finally
+            if (targetVisible && !playerDead.IsReady && !isCasting)
             {
-                pickUpLock.Release();
+                teensy.Write("3");
+                Task.Delay(200);
+                teensy.Write("1");
+                Task.Delay(200);
             }
         }
 
-        private async void PickUpTimer_Tick(object? sender, EventArgs e)
+
+        private void PickUpTimer_Tick(object? sender, EventArgs e)
         {
             if (targetHwnd == IntPtr.Zero) return;
 
-            await pickUpLock.WaitAsync(); // 🔒 заблокировать все остальные
-            try
-            {
-                bool chosen = await Task.Run(() => Target_Chosen.IsSelected(targetHwnd));
-                bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
-                var playerDead = await Task.Run(() => HpPlayerCheck.Scan(targetHwnd));
+            bool chosen = Target_Chosen.IsSelected(targetHwnd);
+            bool targetVisible = HP_Target_Monster.Scan(targetHwnd);
+            var playerDead = HpPlayerCheck.Scan(targetHwnd);
 
-                if (chosen && !targetVisible && !playerDead.IsReady)
-                {
-                    teensy.Write("L");          
-                    await Task.Delay(1000);     
-                    teensy.Write("L");          
-                    await Task.Delay(1000);     
-                    teensy.Write("L");          
-                    await Task.Delay(1000);     
-                    searchTriggerCount = 0;
-                }
-            }
-            finally
+            if (chosen && !targetVisible && !playerDead.IsReady)
             {
-                pickUpLock.Release(); // ✅ отпускаем остальных
+                pickUp = true;
+                teensy.Write("L");
+                teensy.Write("L");
+                Task.Delay(1000);
+                teensy.Write("X");
+
+                pickUp = false;
             }
         }
 
-        private async void findHelper_Tick(object? sender, EventArgs e)
-        {
-            if (targetHwnd == IntPtr.Zero) return;
-            if (searchTriggerCount < 3) return;
 
-            await pickUpLock.WaitAsync();
-            try
-            {
-                bool targetVisible = await Task.Run(() => HP_Target_Monster.Scan(targetHwnd));
-                bool chosen = await Task.Run(() => Target_Chosen.IsSelected(targetHwnd));
-                var point = await Task.Run(() => FindNameOfMonster.FindTargetPixel(targetHwnd));
-                var playerDead = await Task.Run(() => HpPlayerCheck.Scan(targetHwnd));
-
-                if (point.HasValue && !targetVisible && !chosen && !playerDead.IsReady)
-                {
-                    SetCursorPos(point.Value.X, point.Value.Y);
-                    teensy.Write("[");
-                    await Task.Delay(400);
-                    teensy.Write("]");
-                    await Task.Delay(400);
-                    searchTriggerCount = 0;
-                }
-            }
-            finally
-            {
-                pickUpLock.Release();
-            }
-        }
-
-        private async void PlayerDead_Tick(object? sender, EventArgs e)
+        private void PlayerDead_Tick(object? sender, EventArgs e)
         {
             if (targetHwnd == IntPtr.Zero) return;
 
-            await pickUpLock.WaitAsync();
-            try
+            var playerDead = HpPlayerCheck.Scan(targetHwnd);
+            if (playerDead.IsReady)
             {
-                var playerDead = await Task.Run(() => HpPlayerCheck.Scan(targetHwnd));
-                if (playerDead.IsReady)
-                {
-                    SetCursorPos(playerDead.ClickX, playerDead.ClickY);
-                    await Task.Delay(3000);
-                    teensy.Write("[");
-                    await Task.Delay(1000);
-                    StopTimers();
-                    await Task.Delay(1000);
-                    teensy.Write("]");
-                }
-            }
-            finally
-            {
-                pickUpLock.Release();
+                SetCursorPos(playerDead.ClickX, playerDead.ClickY);
+               Task.Delay(3000);
+                teensy.Write("[");
+                 Task.Delay(1000);
+                StopTimers();
+              Task.Delay(1000);
+                teensy.Write("]");
             }
         }
+
 
 
 
@@ -253,7 +213,7 @@ namespace LU4_Walker
             attackTimer.Start();
             searchTimer.Start();
             pickUpTimer.Start();
-           // findHelper.Start();
+          
             playerDead.Start();
             btnStart.IsEnabled = false;
             btnStop.IsEnabled = true;
@@ -264,7 +224,7 @@ namespace LU4_Walker
             attackTimer.Stop();
             searchTimer.Stop();
             pickUpTimer.Stop();
-           // findHelper.Stop();
+        
             playerDead.Stop();
             btnStart.IsEnabled = true;
             btnStop.IsEnabled = false;

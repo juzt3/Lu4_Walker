@@ -71,16 +71,18 @@ namespace LU4_Walker
             using var g = Graphics.FromImage(bmp);
             g.CopyFromScreen(topLeft.x, topLeft.y, 0, 0, new Size(width, height), CopyPixelOperation.SourceCopy);
 
-            // Шаг 1: Проверка HP — если хотя бы один красный пиксель найден, персонаж жив
-            foreach (var point in redPoints)
+            // 🧠 Шаг 1: Универсальная проверка — сканируем верхнюю зону экрана
+            for (int x = width / 100; x < width / 10; x += 3)
             {
-                if (point.X >= width || point.Y >= height) continue;
-                var c = bmp.GetPixel(point.X, point.Y);
-                if (Math.Abs(c.R - point.R) <= 5 && c.G < 30 && c.B < 30)
-                    return result;
+                for (int y = height / 20; y < height / 8; y += 3)
+                {
+                    var c = bmp.GetPixel(x, y);
+                    bool isRedPixel = c.R > 150 && c.G < 40 && c.B < 40;
+                    if (isRedPixel) return result; // персонаж жив — не выполнять шаг 2
+                }
             }
 
-            // Шаг 2: Поиск пары пикселей "Вернуться в город"
+            // 🏙️ Шаг 2: Поиск пары пикселей "Вернуться в город"
             foreach (var (p25, p179) in cityReturnPairs)
             {
                 if (p25.X >= width || p25.Y >= height || p179.X >= width || p179.Y >= height)
@@ -100,5 +102,6 @@ namespace LU4_Walker
 
             return result;
         }
+
     }
 }

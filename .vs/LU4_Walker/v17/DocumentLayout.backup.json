@@ -7,6 +7,18 @@
       "RelativeMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|solutionrelative:mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|c:\\users\\wtopm\\documents\\github\\lu4_walker\\castedspell.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|solutionrelative:castedspell.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|c:\\users\\wtopm\\documents\\github\\lu4_walker\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|solutionrelative:mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|c:\\users\\wtopm\\documents\\github\\lu4_walker\\hpplayercheck.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|solutionrelative:hpplayercheck.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|c:\\users\\wtopm\\documents\\github\\lu4_walker\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|solutionrelative:assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -19,24 +31,12 @@
       "RelativeMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|solutionrelative:overlayhighlighter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|c:\\users\\wtopm\\documents\\github\\lu4_walker\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|solutionrelative:mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|c:\\users\\wtopm\\documents\\github\\lu4_walker\\target_chosen.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|solutionrelative:target_chosen.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|c:\\users\\wtopm\\documents\\github\\lu4_walker\\hpplayercheck.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|solutionrelative:hpplayercheck.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|c:\\users\\wtopm\\documents\\github\\lu4_walker\\findnameofmonster.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|solutionrelative:findnameofmonster.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|c:\\users\\wtopm\\documents\\github\\lu4_walker\\castedspell.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{DD1A7C79-020E-4F71-BAA2-33C8D9B97B15}|LU4_Walker.csproj|solutionrelative:castedspell.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -50,7 +50,7 @@
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
               "Title": "AssemblyInfo.cs",
               "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\AssemblyInfo.cs",
               "RelativeDocumentMoniker": "AssemblyInfo.cs",
@@ -68,14 +68,14 @@
               "RelativeDocumentMoniker": "MainWindow.xaml.cs",
               "ToolTip": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\MainWindow.xaml.cs",
               "RelativeToolTip": "MainWindow.xaml.cs",
-              "ViewState": "AgIAAL4AAAAAAAAAAAAiwAoBAAANAAAAAAAAAA==",
+              "ViewState": "AgIAAFsAAAAAAAAAAAAowHMAAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-10T05:42:15.3Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 7,
               "Title": "Target_Chosen.cs",
               "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\Target_Chosen.cs",
               "RelativeDocumentMoniker": "Target_Chosen.cs",
@@ -87,31 +87,31 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 1,
               "Title": "CastedSpell.cs",
               "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\CastedSpell.cs",
               "RelativeDocumentMoniker": "CastedSpell.cs",
               "ToolTip": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\CastedSpell.cs",
               "RelativeToolTip": "CastedSpell.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAlAAAAAAAAAA==",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAABQAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-28T13:43:13.187Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 3,
               "Title": "HpPlayerCheck.cs",
               "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\HpPlayerCheck.cs",
               "RelativeDocumentMoniker": "HpPlayerCheck.cs",
               "ToolTip": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\HpPlayerCheck.cs",
               "RelativeToolTip": "HpPlayerCheck.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAXAAAAAAAAAA==",
+              "ViewState": "AgIAAA4AAAAAAAAAAAA5wGgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-26T07:36:46.464Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "HP_Target_Monster.cs",
               "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\HP_Target_Monster.cs",
               "RelativeDocumentMoniker": "HP_Target_Monster.cs",
@@ -123,7 +123,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "FindNameOfMonster.cs",
               "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\FindNameOfMonster.cs",
               "RelativeDocumentMoniker": "FindNameOfMonster.cs",
@@ -135,7 +135,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 6,
               "Title": "OverlayHighlighter.cs",
               "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\OverlayHighlighter.cs",
               "RelativeDocumentMoniker": "OverlayHighlighter.cs",
@@ -147,7 +147,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 2,
               "Title": "MainWindow.xaml",
               "DocumentMoniker": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\MainWindow.xaml",
               "RelativeDocumentMoniker": "MainWindow.xaml",

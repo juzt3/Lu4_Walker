@@ -1955,23 +1955,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\wtopm\\.nuget\\packages\\": {},
+    "C:\\Users\\Paragati\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker.csproj",
+      "projectUniqueName": "C:\\Users\\Paragati\\source\\repos\\Lu4_Walker\\LU4_Walker.csproj",
       "projectName": "LU4_Walker",
-      "projectPath": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\LU4_Walker.csproj",
-      "packagesPath": "C:\\Users\\wtopm\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\wtopm\\Documents\\GitHub\\Lu4_Walker\\obj\\",
+      "projectPath": "C:\\Users\\Paragati\\source\\repos\\Lu4_Walker\\LU4_Walker.csproj",
+      "packagesPath": "C:\\Users\\Paragati\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Paragati\\source\\repos\\Lu4_Walker\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\wtopm\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Paragati\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -2036,7 +2036,7 @@
             "privateAssets": "none"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.302/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

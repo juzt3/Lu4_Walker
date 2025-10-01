@@ -45,7 +45,7 @@
 
             <!-- Выбор окна -->
             <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,0,0,10">
-                <Label Content="LU4 окно:" Width="80" Foreground="White"/>
+                <Label Content="LU4 Window:" Width="80" Foreground="White"/>
                 <ComboBox x:Name="cbWindows"
                           Width="280"
                           DropDownOpened="cbWindows_DropDownOpened"
@@ -55,7 +55,7 @@
             <!-- Старт / Стоп таймеров -->
             <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center" Margin="0,0,0,10">
                 <Button x:Name="btnStart"
-                        Content="Старт"
+                        Content="Start"
                         FontWeight="Bold"
                         Background="Green"
                         Foreground="White"
@@ -63,7 +63,7 @@
                         Margin="5"
                         Click="btnStart_Click"/>
                 <Button x:Name="btnStop"
-                        Content="Стоп"
+                        Content="Stop"
                         FontWeight="Bold"
                         Background="Red"
                         Foreground="White"
@@ -85,7 +85,7 @@
 
             <!-- Подсказка -->
             <TextBlock Grid.Row="4"
-                       Text="PageUp / PageDown — горячие клавиши. Все действия по выбранному окну LU4."
+                       Text="PageUp / PageDown — Hotkeys. All actions for the selected LU4 window."
                        Foreground="LightGray"
                        FontStyle="Italic"
                        FontSize="12"

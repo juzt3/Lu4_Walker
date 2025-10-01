@@ -49,15 +49,6 @@ namespace LU4_Walker
 
         private int searchTime = 1;
         private bool pickUp = false;
-  
-
-
-
-
-
-
-
-
 
         public MainWindow()
         {
@@ -67,7 +58,7 @@ namespace LU4_Walker
             try { teensy.Open(); }
             catch (Exception ex)
             {
-                MessageBox.Show($"Не удалось открыть COM3:\n{ex.Message}", "COM-порт", MessageBoxButton.OK);
+                MessageBox.Show($"Failed to open COM3:\n{ex.Message}", "COM port", MessageBoxButton.OK);
             }
 
             attackTimer.Interval = TimeSpan.FromMilliseconds(800);
@@ -206,7 +197,7 @@ namespace LU4_Walker
         {
             if (targetHwnd == IntPtr.Zero)
             {
-                MessageBox.Show("Выберите окно LU4", "Ошибка");
+                MessageBox.Show("Select window LU4", "Error");
                 return;
             }
 
@@ -235,7 +226,7 @@ namespace LU4_Walker
         {
             if (targetHwnd == IntPtr.Zero)
             {
-                MessageBox.Show("Выберите окно LU4");
+                MessageBox.Show("Select window LU4");
                 return;
             }
 
@@ -252,7 +243,7 @@ namespace LU4_Walker
 
             string file = $"{DateTime.Now:yyyy-MM-dd - HH-mm-ss}.bmp";
             bmp.Save(file);
-            MessageBox.Show($"Скриншот сохранён:\n{file}");
+            MessageBox.Show($"Screenshot saved:\n{file}");
         }
 
         // 🪟 Комбо-бокс выбора окна
